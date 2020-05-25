@@ -22,7 +22,7 @@ class HectareListener(RDLListener):
         self.cur_addrmap = AddressMap()
 
     def exit_Addrmap(self, node):
-        print("Exiting addrmap", node.get_path())
+        self.logger.debug("Exiting addrmap, node = %s", node.get_path())
         self.addrmaps.append(self.cur_addrmap)
 
     def enter_Reg(self, node):

@@ -72,4 +72,113 @@ VHDL_FSM_READ = """
       end if;
     end if;
   end process;
+
+  raddr_word <= to_integer(unsigned(S_AXI_ARADDR(G_ADDR_W-1 downto 2)));
+"""
+
+VHDL_FSM_WRITE = """
+  proc_read_output: process (state_read)
+  begin
+    case state_read is
+      when sReadIdle =>
+        arready_wire <= '1';
+        rvalid_wire <= '0';
+      when sReadValid =>
+        arready_wire <= '0';
+        rvalid_wire <= '1';
+      when others =>
+        arready_wire <= '0';
+        rvalid_wire <= '0';
+    end case;
+  end process;
+
+  S_AXI_ARREADY <= arready_wire;
+  S_AXI_RVALID <= rvalid_wire;
+  S_AXI_RDATA <= rdata_reg;
+  S_AXI_RRESP <= "00";
+
+  proc_state_write_prev: process (clk) begin
+    if rising_edge(clk) then
+      state_write_prev <= state_write;
+    end if;
+  end process;
+
+  proc_state_write: process (clk) begin
+    if rising_edge (clk) then
+      if reset = '1' then
+        state_write <= sWriteIdle;
+      else
+        case state_write is
+          when sWriteIdle =>
+            if S_AXI_AWVALID = '1' and S_AXI_WVALID = '1' then
+              state_write <= sWriteResp;
+              waddr_reg <= S_AXI_AWADDR;
+              wdata_reg <= S_AXI_WDATA;
+            elsif S_AXI_AWVALID = '1' and S_AXI_WVALID = '0' then
+              state_write <= sWriteWaitData;
+              waddr_reg <= S_AXI_AWADDR;
+            elsif S_AXI_AWVALID = '0' and S_AXI_WVALID = '1' then
+              state_write <= sWriteWaitAddr;
+              wdata_reg <= S_AXI_WDATA;
+            end if;
+          when sWriteWaitData =>
+            if S_AXI_WVALID = '1' then
+              state_write <= sWriteResp;
+              wdata_reg <= S_AXI_WDATA;
+            end if;
+          when sWriteWaitAddr =>
+            if S_AXI_AWVALID = '1' then
+              state_write <= sWriteResp;
+              waddr_reg <= S_AXI_AWADDR;
+            end if;
+          when sWriteResp =>
+            if S_AXI_BREADY = '1' then
+              state_write <= sWriteIdle;
+            end if;
+        end case;
+      end if;
+    end if;
+  end process;
+
+  waddr_word <= to_integer(unsigned(waddr_reg(G_ADDR_W-1 downto 2)));
+"""
+
+VHDL_WRITE_OUTPUT = """
+
+  proc_write_output: process (state_write) begin
+    case state_write is
+      when sWriteIdle =>
+        awready_wire <= '1';
+        wready_wire <= '1';
+        bvalid_wire <= '0';
+      when sWriteWaitData =>
+        awready_wire <= '0';
+        wready_wire <= '1';
+        bvalid_wire <= '0';
+      when sWriteWaitAddr =>
+        awready_wire <= '1';
+        wready_wire <= '0';
+        bvalid_wire <= '0';
+      when sWriteResp =>
+        awready_wire <= '0';
+        wready_wire <= '0';
+        bvalid_wire <= '1';
+      when others =>
+        awready_wire <= '0';
+        wready_wire <= '0';
+        bvalid_wire <= '0';
+    end case;
+  end process;
+
+  S_AXI_AWREADY <= awready_wire;
+  S_AXI_WREADY <= wready_wire;
+  S_AXI_BRESP <= "00";
+  S_AXI_BVALID <= bvalid_wire;
+"""
+
+VHDL_BEGIN_ARCH = """
+"""
+
+VHDL_END_ARCH = """
+end architecture;
 """

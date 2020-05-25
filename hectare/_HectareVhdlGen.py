@@ -25,13 +25,13 @@ class HectareVhdlGen:
         s += "\n);\n"
         s += "end entity;"
 
-        s += "\n\n# address constants\n"
+        s += "\n\n-- address constants\n"
         s += "\n".join(self._gen_reg_addr())
 
-        s += "\n\n# field ranges constants\n"
+        s += "\n\n-- field ranges constants\n"
         s += "\n".join(self._gen_field_ranges())
 
-        s += "\n\n# registers\n"
+        s += "\n\n-- registers\n"
         s += "\n".join(self._gen_regs())
 
         s += _vhdlt.VHDL_INTERNAL_SIG_DEFS
@@ -41,6 +41,19 @@ class HectareVhdlGen:
         s += "\n".join(self._gen_hw_access())
 
         s += _vhdlt.VHDL_FSM_READ
+
+        s += "\n\n  -- ### read logic\n\n"
+        s += "\n".join(self._gen_read_logic())
+        s += "\n"
+
+        s += _vhdlt.VHDL_FSM_WRITE
+        s += _vhdlt.VHDL_FSM_WRITE
+
+        s += "  -- ### write logic (use waddr_word and wdata_reg)\n\n"
+        s += "\n".join(self._gen_write_logic())
+
+        s += _vhdlt.VHDL_WRITE_OUTPUT
+        s += _vhdlt.VHDL_END_ARCH
 
         return s
 
@@ -69,13 +82,75 @@ class HectareVhdlGen:
             self._gen_single_reg(reg, self.data_w_bytes) for reg in self.addrmap.regs
         ]
 
-    def _gen_hw_access(self):
+    def _gen_hw_access(self) -> list:
         hw_access_exprs = []
         for reg in self.addrmap.regs:
             for field in reg.fields:
                 hw_access_exprs.extend(self._gen_single_hw_access(reg.name, field))
 
         return hw_access_exprs
+
+    def _gen_read_logic(self) -> list:
+        lines = []
+
+        lines.append("  proc_rdata_reg: process (clk)")
+        lines.append("  begin")
+        lines.append("    if rising_edge(clk) then")
+        lines.append("      rdata_reg <= (others => '0');")
+        lines.append("      case raddr_word is")
+        for reg in self.addrmap.regs:
+            lines.append("        when C_ADDR_{0} =>".format(reg.name.upper()))
+            reg_has_assign = False
+            for field in reg.fields:
+                line = self._gen_single_sw_rd_access(reg.name, field)
+                if line is not None:
+                    lines.append("          " + line)
+                    reg_has_assign = True
+
+            if not reg_has_assign:
+                lines.append("          null;")
+
+        # lines.append("        when C_ADDR_ID                  => rdata_reg <= C_REG_ID;")
+        lines.append("      end case;")
+        lines.append("    end if;")
+        lines.append("  end process;")
+        return lines
+
+    def _gen_write_logic(self) -> list:
+        lines = []
+        lines.append("proc_write: process (clk) begin")
+        lines.append("  if rising_edge(clk) then")
+        lines.append("")
+        lines.append("    -- default (TODO)")
+        # TODO: handle here pulses
+        lines.append("")
+
+        lines.append(
+            "    if state_write = sWriteResp and state_write_prev /= sWriteResp then"
+        )
+        lines.append("      case waddr_word is")
+
+        for reg in self.addrmap.regs:
+            lines.append("        when C_ADDR_{0} =>".format(reg.name.upper()))
+            reg_has_assign = False
+            for field in reg.fields:
+                line = self._gen_single_sw_wr_access(reg.name, field)
+                if line is not None:
+                    lines.append("          " + line)
+                    reg_has_assign = True
+
+            if not reg_has_assign:
+                lines.append("          null;")
+
+            # when C_ADDR_SCRATCH       => reg_scratch      <= wdata_reg;
+        lines.append("        when others  =>")
+        lines.append("          null;")
+        lines.append("      end case;")
+        lines.append("    end if;")
+        lines.append("  end if;")
+        lines.append("end process;")
+
+        return lines
 
     @staticmethod
     def _gen_single_addr(reg: Register, data_w_bytes: int):
@@ -186,3 +261,55 @@ class HectareVhdlGen:
             l.append(in_str)
 
         return l
+
+    @staticmethod
+    def _gen_single_sw_rd_access(reg_name: str, field: Field):
+        """
+
+        Several possible cases: no access, SW only read, SW only write, SW r/w
+
+        reg_idelay_inc(8 downto 0) <= wdata_reg(8 downto 0);
+        """
+
+        # TODO: mypy None or str
+
+        assert (
+            field.sw_acc_type != AccessType.rw1 or field.sw_acc_type != AccessType.w1
+        ), '"rw1" and "w1" are not supported for HW access'
+
+        if field.sw_acc_type == AccessType.r or field.sw_acc_type == AccessType.rw:
+            out_str = "rdata_reg({msb} downto {lsb}) <= reg_{reg_name}({msb} downto {lsb});".format(
+                field_name=field.name.lower(),
+                reg_name=reg_name.lower(),
+                msb=field.msb,
+                lsb=field.lsb,
+            )
+            return out_str
+
+        return None
+
+    @staticmethod
+    def _gen_single_sw_wr_access(reg_name: str, field: Field):
+        """
+
+        Several possible cases: no access, SW only read, SW only write, SW r/w
+
+        reg_idelay_inc(8 downto 0) <= wdata_reg(8 downto 0);
+        """
+
+        # TODO: mypy None or str
+
+        assert (
+            field.sw_acc_type != AccessType.rw1 or field.sw_acc_type != AccessType.w1
+        ), '"rw1" and "w1" are not supported for HW access'
+
+        if field.sw_acc_type == AccessType.w or field.sw_acc_type == AccessType.rw:
+            in_str = "reg_{reg_name}({msb} downto {lsb}) <= wdata_reg({msb} downto {lsb});".format(
+                field_name=field.name.lower(),
+                reg_name=reg_name.lower(),
+                msb=field.msb,
+                lsb=field.lsb,
+            )
+            return in_str
+
+        return None
