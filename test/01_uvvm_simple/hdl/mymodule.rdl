@@ -36,8 +36,10 @@ addrmap mymodule {
 
     reg {
         field {
+            sw=r;hw=rw;
         } SUM[15:0];
         field {
+            sw=r;hw=rw;
         } DIFF[31:16];
     } RESULT @ 0x18;
 };

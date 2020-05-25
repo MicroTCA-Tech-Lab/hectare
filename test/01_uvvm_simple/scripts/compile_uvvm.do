@@ -28,6 +28,10 @@ do $UVVM_PATH/$lib_name/script/compile_src.do $UVVM_PATH/$lib_name
 set lib_name "bitvis_vip_scoreboard"
 do $UVVM_PATH/$lib_name/script/compile_src.do $UVVM_PATH/$lib_name
 
+# clock generator
+set lib_name "bitvis_vip_clock_generator"
+do $UVVM_PATH/$lib_name/script/compile_src.do $UVVM_PATH/$lib_name
+
 # BFM: axi lite
 set lib_name "bitvis_vip_axilite"
 do $UVVM_PATH/$lib_name/script/compile_src.do $UVVM_PATH/$lib_name
