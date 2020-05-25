@@ -1,0 +1,43 @@
+
+addrmap mymodule {
+    name = "Simple module with a couple of registers";
+    desc = "test 1,2,3, is this thing on?";
+    
+    default regwidth = 32;
+    default sw = rw;
+    default hw = r;
+
+    reg {
+        name = "Status register";
+
+        field {
+            sw=r; hw=rw;
+        } READY[31];
+
+    } STATUS @ 0x0;
+
+    reg {
+        name = "Control register";
+
+        field {
+            desc = "enable";
+        } ENABLE[31];
+    } CONTROL @ 0x4;
+
+    reg {
+        field {
+        } A[15:0];
+    } COEF_A @ 0x10;
+
+    reg {
+        field {
+        } B[15:0];
+    } COEF_B @ 0x14;
+
+    reg {
+        field {
+        } SUM[15:0];
+        field {
+        } DIFF[31:16];
+    } RESULT @ 0x18;
+};

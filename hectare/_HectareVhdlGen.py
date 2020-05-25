@@ -2,6 +2,11 @@
 Copyright (c) 2020 Deutsches Elektronen-Synchrotron DESY.
 """
 
+import datetime
+import getpass
+import os
+import socket
+
 from systemrdl.rdltypes import AccessType
 
 import _vhdl_templates as _vhdlt
@@ -12,18 +17,29 @@ class HectareVhdlGen:
     def __init__(self, addrmap):
         self.addrmap = addrmap
         self.cur_indent = 0
-        self.data_w_bytes = 4  # 32 / 8  # TODO check
+        self.data_w_bytes = 4  # 32 / 8  # TODO check regwidth
 
     def generate_string(self):
-        # TODO: add header
         s = ""
 
-        s += "entity x is\n"
+        s += self._gen_header()
+
+        s += _vhdlt.VHDL_LIBS
+        s += "\n"
+
+        s += "entity {entity_name} is\n".format(entity_name=self.addrmap.name)
+        s += "  generic(\n"
+        s += "    G_ADDR_W: integer := 8\n"
+        s += "  );\n"
         s += "  port (\n"
         s += "\n".join(self._gen_ports())
         s += _vhdlt.VHDL_PORTS_AXI
         s += "\n);\n"
-        s += "end entity;"
+        s += "end entity;\n\n"
+
+        s += "architecture arch of {entity_name} is\n".format(
+            entity_name=self.addrmap.name
+        )
 
         s += "\n\n-- address constants\n"
         s += "\n".join(self._gen_reg_addr())
@@ -47,7 +63,6 @@ class HectareVhdlGen:
         s += "\n"
 
         s += _vhdlt.VHDL_FSM_WRITE
-        s += _vhdlt.VHDL_FSM_WRITE
 
         s += "  -- ### write logic (use waddr_word and wdata_reg)\n\n"
         s += "\n".join(self._gen_write_logic())
@@ -55,6 +70,19 @@ class HectareVhdlGen:
         s += _vhdlt.VHDL_WRITE_OUTPUT
         s += _vhdlt.VHDL_END_ARCH
 
+        return s
+
+    @staticmethod
+    def _gen_header() -> str:
+        s = "-- This file was automatically generated with HECTARE\n"
+        s += "--\n"
+        s += "-- DO NOT EDIT\n"
+        # TODO: add original file name
+        s += "--\n"
+        s += "--   date     = {0}\n".format(datetime.datetime.now().ctime())
+        s += "--   hostname = {0}\n".format(socket.gethostname())
+        s += "--   user     = {0}\n".format(getpass.getuser())
+        s += "\n"
         return s
 
     def _gen_ports(self):
@@ -110,7 +138,8 @@ class HectareVhdlGen:
             if not reg_has_assign:
                 lines.append("          null;")
 
-        # lines.append("        when C_ADDR_ID                  => rdata_reg <= C_REG_ID;")
+        lines.append("        when others  =>")
+        lines.append("          null;")
         lines.append("      end case;")
         lines.append("    end if;")
         lines.append("  end process;")
@@ -142,7 +171,6 @@ class HectareVhdlGen:
             if not reg_has_assign:
                 lines.append("          null;")
 
-            # when C_ADDR_SCRATCH       => reg_scratch      <= wdata_reg;
         lines.append("        when others  =>")
         lines.append("          null;")
         lines.append("      end case;")
@@ -207,8 +235,8 @@ class HectareVhdlGen:
             out_str = "{reg_name}_{field_name}_o : out std_logic_vector({msb} downto {lsb});".format(
                 field_name=field.name.lower(),
                 reg_name=reg_name.lower(),
-                msb=field.msb,
-                lsb=field.lsb,
+                msb=field.msb - field.lsb,
+                lsb=0,
             )
             l.append(out_str)
 
@@ -216,8 +244,8 @@ class HectareVhdlGen:
             in_str = "{reg_name}_{field_name}_i : in std_logic_vector({msb} downto {lsb});".format(
                 field_name=field.name.lower(),
                 reg_name=reg_name.lower(),
-                msb=field.msb,
-                lsb=field.lsb,
+                msb=field.msb - field.lsb,
+                lsb=0,
             )
             l.append(in_str)
 

@@ -1,0 +1,2 @@
+
+vcom ../hdl/mymodule.vhd

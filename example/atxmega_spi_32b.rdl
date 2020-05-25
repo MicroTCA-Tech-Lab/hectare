@@ -6,7 +6,7 @@ addrmap atxmega_spi {
     http://ww1.microchip.com/downloads/en/DeviceDoc/Atmel-8331-8-and-16-bit-AVR-Microcontroller-XMEGA-AU_Manual.pdf
     ";
     
-    default regwidth = 8;
+    default regwidth = 32;
     default sw = rw;
     default hw = r;
     

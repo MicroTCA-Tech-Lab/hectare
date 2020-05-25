@@ -4,7 +4,8 @@ Copyright (c) 2020 Deutsches Elektronen-Synchrotron DESY.
 
 
 class AddressMap:
-    def __init__(self):
+    def __init__(self, name):
+        self.name = name
         self.regs = []
 
 

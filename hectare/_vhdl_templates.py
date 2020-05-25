@@ -2,6 +2,12 @@
 Copyright (c) 2020 Deutsches Elektronen-Synchrotron DESY.
 """
 
+VHDL_LIBS = """
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+"""
+
 VHDL_PORTS_AXI = """
     clk           : in std_logic;
     reset         : in std_logic;

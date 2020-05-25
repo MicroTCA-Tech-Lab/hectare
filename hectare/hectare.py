@@ -38,7 +38,9 @@ def main():
         walker.walk(root, listener)
 
         vhdl = HectareVhdlGen(listener.addrmaps[0])
-        print(vhdl.generate_string())
+        s = vhdl.generate_string()
+        pre, _ = os.path.splitext(args.filename)
+        open(pre + ".vhd", "w").write(s)
 
     except RDLCompileError as err:
         print(err)
