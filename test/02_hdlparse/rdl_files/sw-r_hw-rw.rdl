@@ -1,0 +1,15 @@
+
+addrmap mymodule {
+    name = "A single register, software reads, hardware reads and writes";
+    
+    default regwidth = 32;
+
+    reg {
+        name = "Status register";
+
+        field {
+            sw=r;hw=rw;
+        } READY[16:16];
+
+    } reg1 @ 0x0;
+};

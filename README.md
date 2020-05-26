@@ -30,6 +30,11 @@ do ../scripts/compile_uvvm.do
 do ../scripts/sim.do
 ```
 
+### 02_hdlparse
+
+Requires **hdlparse** from a fork (the one from pip is missing some features)
+available from https://github.com/andresmanelli/hdlparse on branch `entity`.
+
 ---
 
 Accellera™ and SystemRDL™ are  trademarks of Accellera Systems Initiative Inc.

@@ -1,12 +1,16 @@
 #! /usr/bin/env python3
 
+"""
+Copyright (c) 2020 Deutsches Elektronen-Synchrotron DESY
+"""
+
 import sys
 import unittest
 
 from systemrdl.rdltypes import AccessType
 
 # isort: off
-sys.path.append("../../hectare")
+sys.path.insert(0, "../../hectare")
 from _HectareVhdlGen import HectareVhdlGen
 from _hectare_types import Field, Register
 

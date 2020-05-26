@@ -15,6 +15,23 @@ from _HectareListener import HectareListener
 from _HectareVhdlGen import HectareVhdlGen
 
 
+def gen_vhdl_axi(filename):
+    rdlc = RDLCompiler()
+    rdlc.compile_file(filename)
+    root = rdlc.elaborate()
+
+    walker = RDLWalker(unroll=True)
+    listener = HectareListener()
+    walker.walk(root, listener)
+
+    vhdl = HectareVhdlGen(listener.addrmaps[0])
+    s = vhdl.generate_string()
+    pre, _ = os.path.splitext(filename)
+    out_file = open(pre + ".vhd", "w")
+    out_file.write(s)
+    out_file.close()
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="HECTARE - Hamburg Elegant CreaTor from Accelera systemrdl to REgisters"
@@ -29,19 +46,7 @@ def main():
         logging.basicConfig(level=logging.DEBUG)
 
     try:
-        rdlc = RDLCompiler()
-        rdlc.compile_file(args.filename)
-        root = rdlc.elaborate()
-
-        walker = RDLWalker(unroll=True)
-        listener = HectareListener()
-        walker.walk(root, listener)
-
-        vhdl = HectareVhdlGen(listener.addrmaps[0])
-        s = vhdl.generate_string()
-        pre, _ = os.path.splitext(args.filename)
-        open(pre + ".vhd", "w").write(s)
-
+        gen_vhdl_axi(args.filename)
     except RDLCompileError as err:
         print(err)
         sys.exit(1)
