@@ -12,4 +12,4 @@ addrmap mymodule {
         } READY[16:16];
 
     } reg1 @ 0x0;
-};
+} mymodule;

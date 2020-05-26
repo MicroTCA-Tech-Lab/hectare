@@ -35,6 +35,16 @@ do ../scripts/sim.do
 Requires **hdlparse** from a fork (the one from pip is missing some features)
 available from https://github.com/andresmanelli/hdlparse on branch `entity`.
 
+### 03_ordt_equivalence
+
+Compares the output of HECTARE against Juniper®
+[ordt](https://github.com/Juniper/open-register-design-tool).
+
+Alias to `ordt` should be created, as explained
+[here](https://github.com/Juniper/open-register-design-tool/wiki/Running-Ordt).
+
 ---
 
-Accellera™ and SystemRDL™ are  trademarks of Accellera Systems Initiative Inc.
+Accellera™ and SystemRDL™ are trademarks of Accellera Systems Initiative Inc.
+
+Juniper® is a registered trademark of Juniper Networks, Inc.
