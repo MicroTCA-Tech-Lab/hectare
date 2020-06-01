@@ -1,0 +1,45 @@
+
+
+addrmap mymodule {
+    name = "Slightly more complicated test";
+    
+    default regwidth = 32;
+
+    //==========================================================================
+    // registers
+
+    reg {
+        name = "Status register";
+
+        field {
+            sw=r; hw=rw;
+        } READY[16:16];
+
+    } R1 @ 0x0;
+
+    reg {
+        name = "Increment/decrement tap value in IDELAY";
+
+        field {
+            sw=rw; hw=r;
+            swmod;
+        } INC_DEC[8] = 8'hFF;
+    } INC_DEC;
+
+    reg {
+        name = "Register with reset value";
+        field {
+            sw=rw; hw=r;
+            reset=32'hABCD1234;
+        } MY_RESET_FIELD[31:0];
+    } RST_TEST1;
+
+    reg {
+        name = "Register generating a single pulse";
+        field {
+            sw=w; hw=r;
+            singlepulse;
+        } PULSE[1] = 0;
+    } PULSE;
+
+} mymodule;

@@ -14,15 +14,16 @@ from _hectare_types import AddressMap, Field, Register
 
 
 class HectareVhdlGen:
-    def __init__(self, addrmap):
+    def __init__(self, addrmap, input_filename=""):
         self.addrmap = addrmap
         self.cur_indent = 0
         self.data_w_bytes = 4  # 32 / 8  # TODO check regwidth
+        self.input_filename = input_filename
 
     def generate_string(self):
         s = ""
 
-        s += self._gen_header()
+        s += self._gen_header(self.input_filename)
 
         s += _vhdlt.VHDL_LIBS
         s += "\n"
@@ -56,6 +57,7 @@ class HectareVhdlGen:
 
         s += "\n".join(self._gen_hw_access())
 
+        s += "\n\n\n"
         s += _vhdlt.VHDL_FSM_READ
 
         s += "\n\n  -- ### read logic\n\n"
@@ -73,15 +75,16 @@ class HectareVhdlGen:
         return s
 
     @staticmethod
-    def _gen_header() -> str:
+    def _gen_header(input_filename: str, verbose=False) -> str:
         s = "-- This file was automatically generated with HECTARE\n"
         s += "--\n"
         s += "-- DO NOT EDIT\n"
-        # TODO: add original file name
         s += "--\n"
-        s += "--   date     = {0}\n".format(datetime.datetime.now().ctime())
-        s += "--   hostname = {0}\n".format(socket.gethostname())
-        s += "--   user     = {0}\n".format(getpass.getuser())
+        s += "--   input_filename = {0}\n".format(input_filename)
+        if verbose:
+            s += "--   date     = {0}\n".format(datetime.datetime.now().ctime())
+            s += "--   hostname = {0}\n".format(socket.gethostname())
+            s += "--   user     = {0}\n".format(getpass.getuser())
         s += "\n"
         return s
 

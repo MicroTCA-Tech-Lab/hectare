@@ -1,0 +1,83 @@
+
+addrmap udp_ipv4_engine {
+    name = "Example - UDP/IPv4 Engine (REDUCED)";
+    desc = "This is a reduced version of the register map from the UDP/IPv4 core
+    provided by MicroTCA TechLab at DESY. Here it is used just to demonstrate
+    the capabilities of HECTARE.
+    ";
+    
+    default regwidth = 32;
+    default sw = rw;
+    default hw = r;
+    
+    reg {
+        name = "Identification Register";
+        desc = "Useful to check if core is accessible and if SW is using a correct address";
+
+        field {
+            sw = r;
+            hw = na;
+        } ID[31:0] = 32'h00D7e293;
+    } REG_ID @ 0x0;
+        
+    reg {
+        name = "Version Register";
+        desc = "Core version (major.minor.patch) encoded as 0x00mamipa";
+
+        field {
+            sw = r;
+            hw = w;
+        } VER[31:0];
+    } REG_VER @ 4;
+
+    reg {
+        name = "Scratch Register";
+        desc = "Scratch register which can be used freely to test AXI read and write";
+        field {
+            sw = rw;
+            hw = na;
+        } SCRATCH[31:0];
+    } REG_SCRATCH @ 0xC;
+
+    reg {
+        name = "Source MAC Address, MSB";
+        desc = "Source MAC address (48 bits) is composed as {REG_SRC_MAC0[15:0], (REG_SRC_MAC1}";
+        field {
+            sw = rw;
+            hw = r;
+        } SRC_MAC0[15:0];
+    } REG_SRC_MAC0 @ 0x18;
+
+    reg {
+        name = "Source MAC Address, LSB";
+        desc = "Source MAC address (48 bits) is composed as {REG_SRC_MAC0[15:0], (REG_SRC_MAC1}";
+        field {
+            sw = rw;
+            hw = r;
+        } SRC_MAC1[31:0];
+    } REG_SRC_MAC1 @ 0x1C;
+
+    reg {
+        name = "Counter Reset registers";
+        desc = "Write 1 to this register to reset all statistics counters (CNTR_*)";
+
+        field {
+            name = "Reset counters";
+            sw = w;
+            hw = r;
+            singlepulse;
+        } RST[0:0] = 0;
+    } REG_CNTR_RST @ 0x24;
+
+    reg {
+        name = "Feature Enable Register";
+        desc = "Gives control to SW to enable individual features";
+
+        field {
+            name = "Addr Collision Detection enable";
+            desc = "enable Address Collision Detection (ARP probe and announce)
+            when a new IPv4 address is set";
+        } ADDR_COL_DET[0:0];
+    } REG_FEAT_EN @ 0x28;
+
+} udp_ipv4_engine;

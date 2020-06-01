@@ -1,0 +1,12 @@
+{
+    "signal": [
+        {"name": "clk", "wave": "p.|..."},
+        {"name": "", "node" : ".w....." },
+        {"name": "reg_o", "wave": "x.|.2.", "node": "....x."}
+    ],
+    "edge": ["w~>x"],
+    "head": {
+        "text": ["tspan",  "simple write"],
+        "tick": 0
+    }
+}

@@ -24,7 +24,7 @@ def gen_vhdl_axi(filename):
     listener = HectareListener()
     walker.walk(root, listener)
 
-    vhdl = HectareVhdlGen(listener.addrmaps[0])
+    vhdl = HectareVhdlGen(listener.addrmaps[0], input_filename=filename)
     s = vhdl.generate_string()
     pre, _ = os.path.splitext(filename)
     out_file = open(pre + ".vhd", "w")

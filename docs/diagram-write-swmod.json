@@ -1,0 +1,13 @@
+{
+    "signal": [
+        {"name": "clk", "wave": "p.|..."},
+        {"name": "", "node" : ".w....." },
+        {"name": "reg_o", "wave": "x.|.2.", "node": "....x"},
+        {"name": "reg_swmod", "wave": "0.|.10"}
+    ],
+    "edge": ["w~>x"],
+    "head": {
+        "text": ["tspan",  "write with swmod"],
+        "tick": 0
+    }
+}

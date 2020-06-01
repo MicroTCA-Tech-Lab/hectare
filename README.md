@@ -8,7 +8,25 @@ as a front end and a custom backend to generate a VHDL module.
 
 ## Usage
 
+```
+usage: hectare.py [-h] [--debug] filename
 
+HECTARE - Hamburg Elegant CreaTor from Accelera systemrdl to REgisters
+
+positional arguments:
+  filename    .rdl file
+
+optional arguments:
+  -h, --help  show this help message and exit
+  --debug     enable debugging information
+```
+
+## Useful arguments
+
+  * `sw`: `r`, `rw`, `w`, `na`
+  * `hw`: `r`, `rw`, `w`, `na`
+  * `swmod`
+  * `singlepulse`
 
 ## Tests
 
