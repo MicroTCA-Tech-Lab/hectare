@@ -28,9 +28,11 @@ class Field:
         msb: int,
         hw_acc_type: systemrdl.rdltypes.AccessType,
         sw_acc_type: systemrdl.rdltypes.AccessType,
+        swmod: bool,
     ):
         self.name: str = name
         self.lsb: int = lsb
         self.msb: int = msb
         self.hw_acc_type: systemrdl.rdltypes.AccessType = hw_acc_type
         self.sw_acc_type: systemrdl.rdltypes.AccessType = sw_acc_type
+        self.swmod: bool = swmod

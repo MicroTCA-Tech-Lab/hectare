@@ -57,14 +57,26 @@ class TestVhdlGenWithHdlparse(unittest.TestCase):
 
         port_o = ports_o[0]
         self.assertEqual(port_o.name, "reg1_ready_o")
-        self.assertEqual(port_o.data_type, "std_logic_vector(0 downto 0)")
+        self.assertEqual(port_o.data_type, "std_logic")
         self.assertEqual(port_o.mode, "out")
 
         port_i = ports_i[0]
         self.assertEqual(port_i.name, "reg1_ready_i")
-        self.assertEqual(port_i.data_type, "std_logic_vector(0 downto 0)")
+        self.assertEqual(port_i.data_type, "std_logic")
         self.assertEqual(port_i.mode, "in")
 
+    def test1(self):
+        vhdl_ex = vhdl.VhdlExtractor()
+        with open("rdl_files/test1.vhd", "r") as fh:
+            code = fh.read()
+        vhdl_objs = vhdl_ex.extract_objects_from_source(code)
+        self.assertEqual(len(vhdl_objs), 1, "hdlparse should find one entity")
+        self.assertEqual(vhdl_objs[0].name, "mymodule", "entity name")
+
+        ports_swmod = [port for port in vhdl_objs[0].ports if port.name == "inc_dec_inc_dec_swmod"]
+        self.assertEqual(
+            len(ports_swmod), 1, "hdlparse should find one port for the swmod signal"
+        )
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)

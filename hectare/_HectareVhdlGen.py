@@ -117,9 +117,12 @@ class HectareVhdlGen:
         return field_ranges
 
     def _gen_regs(self) -> List[str]:
-        return [
-            self._gen_single_reg(reg, self.data_w_bytes) for reg in self.addrmap.regs
-        ]
+        ls = [self._gen_single_reg(reg, self.data_w_bytes) for reg in self.addrmap.regs]
+        for reg in self.addrmap.regs:
+            swmod_reg = self._gen_single_reg_swmod(reg, self.data_w_bytes)
+            if swmod_reg is not None:
+                ls.append(swmod_reg)
+        return ls
 
     def _gen_hw_access(self) -> List[str]:
         hw_access_exprs = []
@@ -161,8 +164,18 @@ class HectareVhdlGen:
         lines.append("proc_write: process (clk) begin")
         lines.append("  if rising_edge(clk) then")
         lines.append("")
-        lines.append("    -- default (TODO)")
+        lines.append("    -- default (pulse)")
+        lines.append("    -- TODO")
         # TODO: handle here pulses
+        lines.append("")
+        lines.append("    -- default (swmod)")
+        for reg in self.addrmap.regs:
+            has_swmod = any(map(lambda f: f.swmod, reg.fields))
+            if has_swmod:
+                lines.append(
+                    "    reg_{name}_swmod <= '0';".format(name=reg.name.lower())
+                )
+
         lines.append("")
 
         lines.append(
@@ -178,6 +191,14 @@ class HectareVhdlGen:
                 if line is not None:
                     lines.append("          " + line)
                     reg_has_assign = True
+                # swmod
+                has_swmod = any(map(lambda f: f.swmod, reg.fields))
+                if has_swmod:
+                    lines.append(
+                        "          reg_{name}_swmod <= '1';".format(
+                            name=reg.name.lower()
+                        )
+                    )
 
             if not reg_has_assign:
                 lines.append("          null;")
@@ -228,13 +249,22 @@ class HectareVhdlGen:
         )
 
     @staticmethod
+    def _gen_single_reg_swmod(reg: Register, data_w_bytes: int) -> Optional[str]:
+        """ generates swmod reg is at least one field in the register has swmod attribute  """
+
+        has_swmod = any(map(lambda f: f.swmod, reg.fields))
+        if has_swmod:
+            return "signal reg_{name}_swmod : std_logic;".format(name=reg.name.lower())
+        else:
+            return None
+
+    @staticmethod
     def _gen_single_port(reg_name: str, field: Field) -> List[str]:
-        """
+        """ Generate output and input ports for a single field
 
-        Several possible cases: no access, HW only read, HW only write, HW r/w
+        Several possible cases: no access, HW only read, HW only write, HW r/w.
+        Also handles swmod attribute, by generating additional _swmod output
         """
-
-        # TODO: if msb == lsb, generate std_logic
 
         l = []
 
@@ -242,23 +272,35 @@ class HectareVhdlGen:
             field.hw_acc_type != AccessType.rw1 or field.hw_acc_type != AccessType.w1
         ), '"rw1" and "w1" are not supported for HW access'
 
+        port_type = (
+            "std_logic"
+            if field.msb == field.lsb
+            else "std_logic_vector({msb} downto {lsb})".format(
+                msb=field.msb - field.lsb, lsb=0
+            )
+        )
+
         if field.hw_acc_type == AccessType.r or field.hw_acc_type == AccessType.rw:
-            out_str = "{reg_name}_{field_name}_o : out std_logic_vector({msb} downto {lsb});".format(
+            out_str = "{reg_name}_{field_name}_o : out {port_type};".format(
                 field_name=field.name.lower(),
                 reg_name=reg_name.lower(),
-                msb=field.msb - field.lsb,
-                lsb=0,
+                port_type=port_type,
             )
             l.append(out_str)
 
         if field.hw_acc_type == AccessType.w or field.hw_acc_type == AccessType.rw:
-            in_str = "{reg_name}_{field_name}_i : in std_logic_vector({msb} downto {lsb});".format(
+            in_str = "{reg_name}_{field_name}_i : in {port_type};".format(
                 field_name=field.name.lower(),
                 reg_name=reg_name.lower(),
-                msb=field.msb - field.lsb,
-                lsb=0,
+                port_type=port_type,
             )
             l.append(in_str)
+
+        if field.swmod:
+            swmod_str = "{reg_name}_{field_name}_swmod : out std_logic;".format(
+                field_name=field.name.lower(), reg_name=reg_name.lower()
+            )
+            l.append(swmod_str)
 
         return l
 
@@ -270,7 +312,6 @@ class HectareVhdlGen:
         """
 
         # TODO: register generation for output
-        # TODO: if msb == lsb, generate std_logic
         # TODO: somewhere handle write enable
 
         l = []
@@ -279,25 +320,35 @@ class HectareVhdlGen:
             field.hw_acc_type != AccessType.rw1 or field.hw_acc_type != AccessType.w1
         ), '"rw1" and "w1" are not supported for HW access'
 
+        reg_slice = (
+            "{msb}".format(msb=field.msb)
+            if field.msb == field.lsb
+            else "{msb} downto {lsb}".format(msb=field.msb, lsb=field.lsb,)
+        )
+
         if field.hw_acc_type == AccessType.r or field.hw_acc_type == AccessType.rw:
-            out_str = "{reg_name}_{field_name}_o <= reg_{reg_name}({msb} downto {lsb});".format(
+            out_str = "{reg_name}_{field_name}_o <= reg_{reg_name}({reg_slice});".format(
                 field_name=field.name.lower(),
                 reg_name=reg_name.lower(),
-                msb=field.msb,
-                lsb=field.lsb,
+                reg_slice=reg_slice,
             )
             l.append(out_str)
 
         if field.hw_acc_type == AccessType.w or field.hw_acc_type == AccessType.rw:
             update_cond = " when rising_edge(clk)" if in_reg else ""
-            in_str = "reg_{reg_name}({msb} downto {lsb}) <= {reg_name}_{field_name}_i{update_cond};".format(
+            in_str = "reg_{reg_name}({reg_slice}) <= {reg_name}_{field_name}_i{update_cond};".format(
                 field_name=field.name.lower(),
                 reg_name=reg_name.lower(),
-                msb=field.msb,
-                lsb=field.lsb,
+                reg_slice=reg_slice,
                 update_cond=update_cond,
             )
             l.append(in_str)
+
+        if field.swmod:
+            swmod_str = "{reg_name}_{field_name}_swmod <= reg_{reg_name}_swmod;".format(
+                field_name=field.name.lower(), reg_name=reg_name.lower(),
+            )
+            l.append(swmod_str)
 
         return l
 
@@ -309,8 +360,6 @@ class HectareVhdlGen:
 
         reg_idelay_inc(8 downto 0) <= wdata_reg(8 downto 0);
         """
-
-        # TODO: mypy None or str
 
         assert (
             field.sw_acc_type != AccessType.rw1 or field.sw_acc_type != AccessType.w1
@@ -332,8 +381,6 @@ class HectareVhdlGen:
 
         reg_idelay_inc(8 downto 0) <= wdata_reg(8 downto 0);
         """
-
-        # TODO: mypy None or str
 
         assert (
             field.sw_acc_type != AccessType.rw1 or field.sw_acc_type != AccessType.w1
