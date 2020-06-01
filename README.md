@@ -9,16 +9,18 @@ as a front end and a custom backend to generate a VHDL module.
 ## Usage
 
 ```
-usage: hectare.py [-h] [--debug] filename
+$ hectare.py --help
+usage: hectare.py [-h] [--debug] [--axi-vhdl VHDL_NAME] filename
 
 HECTARE - Hamburg Elegant CreaTor from Accelera systemrdl to REgisters
 
 positional arguments:
-  filename    .rdl file
+  filename              .rdl file
 
 optional arguments:
-  -h, --help  show this help message and exit
-  --debug     enable debugging information
+  -h, --help            show this help message and exit
+  --debug               enable debugging information
+  --axi-vhdl VHDL_NAME  generate AXI4-Lite slave
 ```
 
 ## Useful arguments

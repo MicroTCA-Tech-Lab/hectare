@@ -27,7 +27,7 @@ class TestVhdlGenWithHdlparse(unittest.TestCase):
             if filename.endswith(".rdl"):
                 full_filename = os.path.join("rdl_files", filename)
                 cls.logger.debug("creating VHDL AXI for  %s", full_filename)
-                hectare.gen_vhdl_axi(full_filename)
+                hectare.gen_vhdl_axi(full_filename, full_filename.replace(".rdl", ".vhd"))
 
     @classmethod
     def tearDownClass(cls):
