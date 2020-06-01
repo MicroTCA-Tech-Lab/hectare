@@ -2,24 +2,35 @@
 Copyright (c) 2020 Deutsches Elektronen-Synchrotron DESY.
 """
 
+from typing import Dict, List, Optional, Set, Tuple
+
+import systemrdl
+
 
 class AddressMap:
-    def __init__(self, name):
+    def __init__(self, name: str):
         self.name = name
-        self.regs = []
+        self.regs: List[Register] = []
 
 
 class Register:
-    def __init__(self, name, addr):
-        self.name = name
-        self.addr = addr
-        self.fields = []
+    def __init__(self, name: str, addr: int):
+        self.name: str = name
+        self.addr: int = addr
+        self.fields: List[Field] = []
 
 
 class Field:
-    def __init__(self, name, lsb, msb, hw_acc_type, sw_acc_type):
-        self.name = name
-        self.lsb = lsb
-        self.msb = msb
-        self.hw_acc_type = hw_acc_type
-        self.sw_acc_type = sw_acc_type
+    def __init__(
+        self,
+        name: str,
+        lsb: int,
+        msb: int,
+        hw_acc_type: systemrdl.rdltypes.AccessType,
+        sw_acc_type: systemrdl.rdltypes.AccessType,
+    ):
+        self.name: str = name
+        self.lsb: int = lsb
+        self.msb: int = msb
+        self.hw_acc_type: systemrdl.rdltypes.AccessType = hw_acc_type
+        self.sw_acc_type: systemrdl.rdltypes.AccessType = sw_acc_type

@@ -6,6 +6,7 @@ import datetime
 import getpass
 import os
 import socket
+from typing import Iterator, List, Optional
 
 from systemrdl.rdltypes import AccessType
 
@@ -13,7 +14,7 @@ import _vhdl_templates as _vhdlt
 from _hectare_types import AddressMap, Field, Register
 
 
-def indent_lines(ls, ident_level):
+def indent_lines(ls: List[str], ident_level: int) -> Iterator[str]:
     for l in ls:
         yield " " * ident_level + l
 
@@ -25,7 +26,7 @@ class HectareVhdlGen:
         self.data_w_bytes = 4  # 32 / 8  # TODO check regwidth
         self.input_filename = input_filename
 
-    def generate_string(self):
+    def generate_string(self) -> str:
         s = ""
 
         s += self._gen_header(self.input_filename)
@@ -82,7 +83,7 @@ class HectareVhdlGen:
         return s
 
     @staticmethod
-    def _gen_header(input_filename: str, verbose=False) -> str:
+    def _gen_header(input_filename: str, verbose: bool = False) -> str:
         s = "-- This file was automatically generated with HECTARE\n"
         s += "--\n"
         s += "-- DO NOT EDIT\n"
@@ -95,19 +96,19 @@ class HectareVhdlGen:
         s += "\n"
         return s
 
-    def _gen_ports(self):
+    def _gen_ports(self) -> List[str]:
         ports = []
         for reg in self.addrmap.regs:
             for field in reg.fields:
                 ports.extend(self._gen_single_port(reg.name, field))
         return ports
 
-    def _gen_reg_addr(self):
+    def _gen_reg_addr(self) -> List[str]:
         return [
             self._gen_single_addr(reg, self.data_w_bytes) for reg in self.addrmap.regs
         ]
 
-    def _gen_field_ranges(self):
+    def _gen_field_ranges(self) -> List[str]:
         field_ranges = []
         for reg in self.addrmap.regs:
             for field in reg.fields:
@@ -115,12 +116,12 @@ class HectareVhdlGen:
 
         return field_ranges
 
-    def _gen_regs(self):
+    def _gen_regs(self) -> List[str]:
         return [
             self._gen_single_reg(reg, self.data_w_bytes) for reg in self.addrmap.regs
         ]
 
-    def _gen_hw_access(self) -> list:
+    def _gen_hw_access(self) -> List[str]:
         hw_access_exprs = []
         for reg in self.addrmap.regs:
             for field in reg.fields:
@@ -128,7 +129,7 @@ class HectareVhdlGen:
 
         return hw_access_exprs
 
-    def _gen_read_logic(self) -> list:
+    def _gen_read_logic(self) -> List[str]:
         lines = []
 
         lines.append("  proc_rdata_reg: process (clk)")
@@ -155,7 +156,7 @@ class HectareVhdlGen:
         lines.append("  end process;")
         return lines
 
-    def _gen_write_logic(self) -> list:
+    def _gen_write_logic(self) -> List[str]:
         lines = []
         lines.append("proc_write: process (clk) begin")
         lines.append("  if rising_edge(clk) then")
@@ -191,7 +192,7 @@ class HectareVhdlGen:
         return lines
 
     @staticmethod
-    def _gen_single_addr(reg: Register, data_w_bytes: int):
+    def _gen_single_addr(reg: Register, data_w_bytes: int) -> str:
         """ Generate an address constant for a single register
 
         E.g. constant C_ADDR_SCRATCH : integer := 3;
@@ -208,7 +209,7 @@ class HectareVhdlGen:
         )
 
     @staticmethod
-    def _gen_single_field_range(reg_name: str, field: Field) -> list:
+    def _gen_single_field_range(reg_name: str, field: Field) -> List[str]:
         return [
             "constant C_FIELD_{reg_name}_{field_name}_MSB : integer := {msb};".format(
                 reg_name=reg_name.upper(), field_name=field.name.upper(), msb=field.msb
@@ -219,7 +220,7 @@ class HectareVhdlGen:
         ]
 
     @staticmethod
-    def _gen_single_reg(reg: Register, data_w_bytes: int):
+    def _gen_single_reg(reg: Register, data_w_bytes: int) -> str:
         """ signal reg_scratch : std_logic_vector(31 downto 0); """
 
         return "signal reg_{name} : std_logic_vector({w}-1 downto 0);".format(
@@ -227,7 +228,7 @@ class HectareVhdlGen:
         )
 
     @staticmethod
-    def _gen_single_port(reg_name: str, field: Field) -> list:
+    def _gen_single_port(reg_name: str, field: Field) -> List[str]:
         """
 
         Several possible cases: no access, HW only read, HW only write, HW r/w
@@ -262,7 +263,7 @@ class HectareVhdlGen:
         return l
 
     @staticmethod
-    def _gen_single_hw_access(reg_name: str, field: Field, in_reg=True) -> list:
+    def _gen_single_hw_access(reg_name: str, field: Field, in_reg=True) -> List[str]:
         """
 
         Several possible cases: no access, HW only read, HW only write, HW r/w
@@ -301,7 +302,7 @@ class HectareVhdlGen:
         return l
 
     @staticmethod
-    def _gen_single_sw_rd_access(reg_name: str, field: Field):
+    def _gen_single_sw_rd_access(reg_name: str, field: Field) -> Optional[str]:
         """
 
         Several possible cases: no access, SW only read, SW only write, SW r/w
@@ -317,17 +318,14 @@ class HectareVhdlGen:
 
         if field.sw_acc_type == AccessType.r or field.sw_acc_type == AccessType.rw:
             out_str = "rdata_reg({msb} downto {lsb}) <= reg_{reg_name}({msb} downto {lsb});".format(
-                field_name=field.name.lower(),
-                reg_name=reg_name.lower(),
-                msb=field.msb,
-                lsb=field.lsb,
+                reg_name=reg_name.lower(), msb=field.msb, lsb=field.lsb,
             )
             return out_str
 
         return None
 
     @staticmethod
-    def _gen_single_sw_wr_access(reg_name: str, field: Field):
+    def _gen_single_sw_wr_access(reg_name: str, field: Field) -> Optional[str]:
         """
 
         Several possible cases: no access, SW only read, SW only write, SW r/w
@@ -343,10 +341,7 @@ class HectareVhdlGen:
 
         if field.sw_acc_type == AccessType.w or field.sw_acc_type == AccessType.rw:
             in_str = "reg_{reg_name}({msb} downto {lsb}) <= wdata_reg({msb} downto {lsb});".format(
-                field_name=field.name.lower(),
-                reg_name=reg_name.lower(),
-                msb=field.msb,
-                lsb=field.lsb,
+                reg_name=reg_name.lower(), msb=field.msb, lsb=field.lsb,
             )
             return in_str
 
