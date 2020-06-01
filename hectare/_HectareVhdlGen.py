@@ -13,6 +13,11 @@ import _vhdl_templates as _vhdlt
 from _hectare_types import AddressMap, Field, Register
 
 
+def indent_lines(ls, ident_level):
+    for l in ls:
+        yield " " * ident_level + l
+
+
 class HectareVhdlGen:
     def __init__(self, addrmap, input_filename=""):
         self.addrmap = addrmap
@@ -33,7 +38,8 @@ class HectareVhdlGen:
         s += "    G_ADDR_W: integer := 8\n"
         s += "  );\n"
         s += "  port (\n"
-        s += "\n".join(self._gen_ports())
+        s += "\n".join(indent_lines(self._gen_ports(), 4))
+        s += "\n"
         s += _vhdlt.VHDL_PORTS_AXI
         s += "\n);\n"
         s += "end entity;\n\n"
@@ -42,14 +48,15 @@ class HectareVhdlGen:
             entity_name=self.addrmap.name
         )
 
-        s += "\n\n-- address constants\n"
-        s += "\n".join(self._gen_reg_addr())
+        s += "\n\n  -- address constants\n"
+        s += "\n".join(indent_lines(self._gen_reg_addr(), 2))
 
-        s += "\n\n-- field ranges constants\n"
-        s += "\n".join(self._gen_field_ranges())
+        s += "\n\n  -- field ranges constants\n"
+        s += "\n".join(indent_lines(self._gen_field_ranges(), 2))
 
-        s += "\n\n-- registers\n"
-        s += "\n".join(self._gen_regs())
+        s += "\n\n  -- registers\n"
+        s += "\n".join(indent_lines(self._gen_regs(), 2))
+        s += "\n\n"
 
         s += _vhdlt.VHDL_INTERNAL_SIG_DEFS
 
