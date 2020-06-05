@@ -1,5 +1,7 @@
 """
 Copyright (c) 2020 Deutsches Elektronen-Synchrotron DESY.
+
+See LICENSE.txt for license details.
 """
 
 import datetime

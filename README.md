@@ -6,6 +6,9 @@ This is a tool which generates AXI4-Lite slave from a description in
 It uses [systemrdl-compiler](https://github.com/SystemRDL/systemrdl-compiler)
 as a front end and a custom backend to generate a VHDL module.
 
+The HECTARE tool is developed by [MicroTCA Tech Lab](https://techlab.desy.de/)
+at DESY.
+
 ## Usage
 
 ```
