@@ -12,8 +12,8 @@ from typing import Iterator, List, Optional
 
 from systemrdl.rdltypes import AccessType
 
-import _vhdl_templates as _vhdlt
-from _hectare_types import AddressMap, Field, Register
+import hectare._vhdl_templates as _vhdlt
+from hectare._hectare_types import AddressMap, Field, Register
 
 
 def indent_lines(ls: List[str], ident_level: int) -> Iterator[str]:

@@ -12,12 +12,8 @@ import unittest
 
 from systemrdl.rdltypes import AccessType
 
-# isort: off
-sys.path.insert(0, "../../hectare")
-from _HectareVhdlGen import HectareVhdlGen
-from _hectare_types import Field, Register
-
-# isort: on
+from hectare._hectare_types import Field, Register
+from hectare._HectareVhdlGen import HectareVhdlGen
 
 
 class TestHectareVhdlGen(unittest.TestCase):

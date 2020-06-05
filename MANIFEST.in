@@ -1,0 +1,11 @@
+include *.txt
+recursive-include docs *.json
+recursive-include docs *.png
+recursive-include docs Makefile
+recursive-include example *.rdl
+recursive-include test *.do
+recursive-include test *.py
+recursive-include test *.rdl
+recursive-include test *.sh
+recursive-include test *.txt
+recursive-include test *.vhd

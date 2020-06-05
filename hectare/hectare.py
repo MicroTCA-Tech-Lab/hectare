@@ -11,8 +11,8 @@ import sys
 
 from systemrdl import RDLCompileError, RDLCompiler, RDLWalker
 
-from _HectareListener import HectareListener
-from _HectareVhdlGen import HectareVhdlGen
+from hectare._HectareListener import HectareListener
+from hectare._HectareVhdlGen import HectareVhdlGen
 
 
 def gen_vhdl_axi(in_filename, out_filename):

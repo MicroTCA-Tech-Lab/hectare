@@ -6,15 +6,14 @@ Copyright (c) 2020 Deutsches Elektronen-Synchrotron DESY
 See LICENSE.txt for license details.
 """
 
+import logging
+import os
 import sys
 import unittest
-import os
-import logging
 
 import hdlparse.vhdl_parser as vhdl
 
-sys.path.insert(0, "../../hectare")
-import hectare
+from hectare import hectare
 
 CONFIG_CLEANUP_VHD_FILES = True
 CONFIG_LOGGING_LEVEL = logging.DEBUG
@@ -29,7 +28,9 @@ class TestVhdlGenWithHdlparse(unittest.TestCase):
             if filename.endswith(".rdl"):
                 full_filename = os.path.join("rdl_files", filename)
                 cls.logger.debug("creating VHDL AXI for  %s", full_filename)
-                hectare.gen_vhdl_axi(full_filename, full_filename.replace(".rdl", ".vhd"))
+                hectare.gen_vhdl_axi(
+                    full_filename, full_filename.replace(".rdl", ".vhd")
+                )
 
     @classmethod
     def tearDownClass(cls):
@@ -75,7 +76,9 @@ class TestVhdlGenWithHdlparse(unittest.TestCase):
         self.assertEqual(len(vhdl_objs), 1, "hdlparse should find one entity")
         self.assertEqual(vhdl_objs[0].name, "mymodule", "entity name")
 
-        ports_swmod = [port for port in vhdl_objs[0].ports if port.name == "inc_dec_inc_dec_swmod"]
+        ports_swmod = [
+            port for port in vhdl_objs[0].ports if port.name == "inc_dec_inc_dec_swmod"
+        ]
         self.assertEqual(
             len(ports_swmod), 1, "hdlparse should find one port for the swmod signal"
         )
@@ -88,9 +91,13 @@ class TestVhdlGenWithHdlparse(unittest.TestCase):
         self.assertEqual(len(vhdl_objs), 1, "hdlparse should find one entity")
         self.assertEqual(vhdl_objs[0].name, "mymodule", "entity name")
 
-        ports_enum = [port for port in vhdl_objs[0].ports if port.name == "mode_select_mode_o"]
+        ports_enum = [
+            port for port in vhdl_objs[0].ports if port.name == "mode_select_mode_o"
+        ]
         self.assertEqual(
-            len(ports_enum), 1, "hdlparse should find one port named \"mode_select_mode_o\""
+            len(ports_enum),
+            1,
+            'hdlparse should find one port named "mode_select_mode_o"',
         )
         port_enum = ports_enum[0]
         self.assertEqual(port_enum.data_type, "ModeSelect_t")
@@ -100,7 +107,11 @@ class TestVhdlGenWithHdlparse(unittest.TestCase):
         with open("rdl_files/test_enum_pkg.vhd", "r") as fh:
             code = fh.read()
         vhdl_objs = vhdl_ex.extract_objects_from_source(code)
-        self.assertEqual(len(vhdl_objs), 2, "hdlparse should find two entitties (package and type def)")
+        self.assertEqual(
+            len(vhdl_objs),
+            2,
+            "hdlparse should find two entitties (package and type def)",
+        )
         self.assertEqual(vhdl_objs[0].name, "mymodule_pkg", "package name")
         self.assertEqual(vhdl_objs[1].name, "ModeSelect_t", "type name")
 

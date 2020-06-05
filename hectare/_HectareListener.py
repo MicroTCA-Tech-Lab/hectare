@@ -9,7 +9,7 @@ import logging
 from systemrdl import RDLListener
 from systemrdl.node import FieldNode, RegNode
 
-from _hectare_types import AddressMap, Field, Register
+from hectare._hectare_types import AddressMap, Field, Register
 
 
 class HectareListener(RDLListener):
