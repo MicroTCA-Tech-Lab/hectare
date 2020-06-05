@@ -26,6 +26,46 @@ class HectareVhdlGen:
         self.data_w_bytes = 4  # 32 / 8  # TODO check regwidth
         self.input_filename = input_filename
 
+    def generate_package(self) -> Optional[str]:
+        """ generates package with VHDL enums if the register description
+        contains enums
+        """
+
+        print("generate_package")
+
+        # first check if any fields are enum, otherwise package is not generated
+        lines = []
+        generated_enums = set()
+
+        for reg in self.addrmap.regs:
+            for field in reg.fields:
+                if field.encode is not None and field.encode not in generated_enums:
+                    lines.extend(self._gen_single_enum_type(field))
+                    lines.append("")
+                    generated_enums.add(field.encode)
+
+        if lines:
+            # at least one enum was found, generated package string
+
+            s = ""
+            s += self._gen_header(self.input_filename)
+            s += _vhdlt.VHDL_LIBS
+            s += "\n"
+
+            s += "package {entity_name}_pkg is\n".format(entity_name=self.addrmap.name)
+            s += "\n"
+            s += "  -- attributes\n"
+            s += "  attribute enum_encoding: string;\n"
+            s += "\n"
+
+            for line in lines:
+                s += "  " + line + "\n"
+
+            s += "\n"
+            s += "end package;\n"
+
+            return s
+
     def generate_string(self) -> str:
         s = ""
 
@@ -33,6 +73,19 @@ class HectareVhdlGen:
 
         s += _vhdlt.VHDL_LIBS
         s += "\n"
+
+        # check if there is package being generated, add package to the includes
+        contains_enums = False
+        for reg in self.addrmap.regs:
+            for field in reg.fields:
+                if field.encode is not None:
+                    contains_enums = True
+
+        if contains_enums:
+            s += "use work.{entity_name}_pkg.all;\n".format(
+                entity_name=self.addrmap.name
+            )
+            s += "\n"
 
         s += "entity {entity_name} is\n".format(entity_name=self.addrmap.name)
         s += "  generic(\n"
@@ -63,7 +116,7 @@ class HectareVhdlGen:
 
         s += "\n\nbegin\n\n"
 
-        s += "\n".join(self._gen_hw_access())
+        s += "\n".join(indent_lines(self._gen_hw_access(), 2))
 
         s += "\n\n\n"
         s += _vhdlt.VHDL_FSM_READ
@@ -213,6 +266,36 @@ class HectareVhdlGen:
         return lines
 
     @staticmethod
+    def _gen_single_enum_type(field: Field) -> str:
+        assert (
+            field.encode is not None
+        ), "_gen_single_enum_type should only be called on enums"
+
+        # right now we only support enums which start at 0 and are sequential
+        do_vals_start_at_zero_and_inc_by_1 = all(
+            map(
+                lambda ab: ab[0] == ab[1],
+                enumerate(map(lambda it: it.value, field.encode)),
+            )
+        )
+        assert (
+            do_vals_start_at_zero_and_inc_by_1
+        ), "only supported encoding are those who start at 0 and increment by 1"
+
+        lines = []
+        lines.append(
+            "type {encode_name}_t is (".format(encode_name=field.encode.__name__)
+        )
+        for item in field.encode:
+            lines.append("  " + item.name + ",")
+
+        # last line has also a ",", which needs to be removed
+        lines[-1] = lines[-1][:-1]
+
+        lines.append(");")
+        return lines
+
+    @staticmethod
     def _gen_single_addr(reg: Register, data_w_bytes: int) -> str:
         """ Generate an address constant for a single register
 
@@ -272,13 +355,14 @@ class HectareVhdlGen:
             field.hw_acc_type != AccessType.rw1 or field.hw_acc_type != AccessType.w1
         ), '"rw1" and "w1" are not supported for HW access'
 
-        port_type = (
-            "std_logic"
-            if field.msb == field.lsb
-            else "std_logic_vector({msb} downto {lsb})".format(
+        if field.encode is not None:
+            port_type = "{encode_name}_t".format(encode_name=field.encode.__name__)
+        elif field.msb == field.lsb:
+            port_type = "std_logic"
+        else:
+            port_type = "std_logic_vector({msb} downto {lsb})".format(
                 msb=field.msb - field.lsb, lsb=0
             )
-        )
 
         if field.hw_acc_type == AccessType.r or field.hw_acc_type == AccessType.rw:
             out_str = "{reg_name}_{field_name}_o : out {port_type};".format(
@@ -308,10 +392,12 @@ class HectareVhdlGen:
     def _gen_single_hw_access(reg_name: str, field: Field, in_reg=True) -> List[str]:
         """
 
-        Several possible cases: no access, HW only read, HW only write, HW r/w
+        - Several possible cases: no access, HW only read, HW only write, HW r/w
+        - if the field is enum, convert from slv to enum for outputs, and from
+          enum to slv for inputs
+
         """
 
-        # TODO: register generation for output
         # TODO: somewhere handle write enable
 
         l = []
@@ -326,21 +412,42 @@ class HectareVhdlGen:
             else "{msb} downto {lsb}".format(msb=field.msb, lsb=field.lsb,)
         )
 
+        if field.encode is None:
+            enum_conv_out_left = ""
+            enum_conv_out_right = ""
+            enum_conv_in_left = ""
+            enum_conv_in_right = ""
+        else:
+            enum_conv_out_left = "{encode_name}_t'val(to_integer(unsigned(".format(
+                encode_name=field.encode.__name__
+            )
+            enum_conv_out_right = ")))"
+            enum_conv_in_left = "std_logic_vector(to_unsigned({encode_name}_t'pos(".format(
+                encode_name=field.encode.__name__
+            )
+            enum_conv_in_right = "), {field_length}))".format(
+                field_length=field.msb - field.lsb + 1
+            )
+
         if field.hw_acc_type == AccessType.r or field.hw_acc_type == AccessType.rw:
-            out_str = "{reg_name}_{field_name}_o <= reg_{reg_name}({reg_slice});".format(
+            out_str = "{reg_name}_{field_name}_o <= {enum_conv_out_left}reg_{reg_name}({reg_slice}){enum_conv_out_right};".format(
                 field_name=field.name.lower(),
                 reg_name=reg_name.lower(),
                 reg_slice=reg_slice,
+                enum_conv_out_left=enum_conv_out_left,
+                enum_conv_out_right=enum_conv_out_right,
             )
             l.append(out_str)
 
         if field.hw_acc_type == AccessType.w or field.hw_acc_type == AccessType.rw:
             update_cond = " when rising_edge(clk)" if in_reg else ""
-            in_str = "reg_{reg_name}({reg_slice}) <= {reg_name}_{field_name}_i{update_cond};".format(
+            in_str = "reg_{reg_name}({reg_slice}) <= {enum_conv_in_left}{reg_name}_{field_name}_i{enum_conv_in_right}{update_cond};".format(
                 field_name=field.name.lower(),
                 reg_name=reg_name.lower(),
                 reg_slice=reg_slice,
                 update_cond=update_cond,
+                enum_conv_in_left=enum_conv_in_left,
+                enum_conv_in_right=enum_conv_in_right,
             )
             l.append(in_str)
 

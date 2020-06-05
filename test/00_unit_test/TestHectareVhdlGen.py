@@ -4,6 +4,7 @@
 Copyright (c) 2020 Deutsches Elektronen-Synchrotron DESY
 """
 
+import enum
 import sys
 import unittest
 
@@ -75,6 +76,36 @@ class TestHectareVhdlGen(unittest.TestCase):
         self.assertEqual(l[0], "myreg_myfield_o <= reg_myreg(8);")
         self.assertEqual(l[1], "reg_myreg(8) <= myreg_myfield_i when rising_edge(clk);")
 
+    def test_gen_single_hw_access_enum_out(self):
+        class ColorSel(enum.Enum):
+            RED = 0
+            GREEN = 1
+            BLUE = 2
+
+        field = Field(
+            "myfield", 0, 2, AccessType.r, AccessType.rw, swmod=False, encode=ColorSel
+        )
+        l = HectareVhdlGen._gen_single_hw_access("myreg", field, in_reg=True)
+        self.assertEqual(
+            l[0],
+            "myreg_myfield_o <= ColorSel_t'val(to_integer(unsigned(reg_myreg(2 downto 0))));",
+        )
+
+    def test_gen_single_hw_access_enum_in(self):
+        class ColorSel(enum.Enum):
+            RED = 0
+            GREEN = 1
+            BLUE = 2
+
+        field = Field(
+            "myfield", 0, 2, AccessType.w, AccessType.rw, swmod=False, encode=ColorSel
+        )
+        l = HectareVhdlGen._gen_single_hw_access("myreg", field, in_reg=True)
+        self.assertEqual(
+            l[0],
+            "reg_myreg(2 downto 0) <= std_logic_vector(to_unsigned(ColorSel_t'pos(myreg_myfield_i), 3)) when rising_edge(clk);",
+        )
+
     def test_gen_single_reg_swmod_no_swmod(self):
         reg = Register("myreg", 0)
         reg.fields.append(
@@ -102,6 +133,46 @@ class TestHectareVhdlGen(unittest.TestCase):
             "signal reg_myreg_swmod : std_logic;",
             "if at least one reg has swmod attribute set, reg is generated",
         )
+
+    def test_gen_single_enum_type(self):
+        class ColorSel(enum.Enum):
+            RED = 0
+            GREEN = 1
+            BLUE = 2
+
+        field = Field(
+            "myfield", 8, 15, AccessType.rw, AccessType.rw, swmod=False, encode=ColorSel
+        )
+
+        lines = HectareVhdlGen._gen_single_enum_type(field)
+        self.assertEqual(
+            len(lines),
+            1 + 3 + 1,
+            "one line per each item, declaration and closing bracket",
+        )
+        self.assertTrue("RED" in lines[1])
+        self.assertTrue("GREEN" in lines[2])
+        self.assertTrue("BLUE" in lines[3])
+
+    def test_gen_single_enum_type_invalid(self):
+        """ generates un-supported encoding (inc != 1) and checks if generator raises expection """
+
+        class ColorSelInvalid(enum.Enum):
+            RED = 0
+            GREEN = 1
+            BLUE = 10  # <- this is not supported
+
+        field = Field(
+            "myfield",
+            8,
+            15,
+            AccessType.rw,
+            AccessType.rw,
+            swmod=False,
+            encode=ColorSelInvalid,
+        )
+
+        self.assertRaises(AssertionError, HectareVhdlGen._gen_single_enum_type, field)
 
 
 if __name__ == "__main__":

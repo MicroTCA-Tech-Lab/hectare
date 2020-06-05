@@ -48,7 +48,8 @@ class HectareListener(RDLListener):
                 node.msb,
                 sw_acc_type=node.get_property("sw"),
                 hw_acc_type=node.get_property("hw"),
-                swmod=node.get_property("swmod")
+                swmod=node.get_property("swmod"),
+                encode=node.get_property("encode"),
             )
         )
 

@@ -78,6 +78,31 @@ class TestVhdlGenWithHdlparse(unittest.TestCase):
             len(ports_swmod), 1, "hdlparse should find one port for the swmod signal"
         )
 
+    def test_enum(self):
+        vhdl_ex = vhdl.VhdlExtractor()
+        with open("rdl_files/test_enum.vhd", "r") as fh:
+            code = fh.read()
+        vhdl_objs = vhdl_ex.extract_objects_from_source(code)
+        self.assertEqual(len(vhdl_objs), 1, "hdlparse should find one entity")
+        self.assertEqual(vhdl_objs[0].name, "mymodule", "entity name")
+
+        ports_enum = [port for port in vhdl_objs[0].ports if port.name == "mode_select_mode_o"]
+        self.assertEqual(
+            len(ports_enum), 1, "hdlparse should find one port named \"mode_select_mode_o\""
+        )
+        port_enum = ports_enum[0]
+        self.assertEqual(port_enum.data_type, "ModeSelect_t")
+
+        # check also the package
+        vhdl_ex = vhdl.VhdlExtractor()
+        with open("rdl_files/test_enum_pkg.vhd", "r") as fh:
+            code = fh.read()
+        vhdl_objs = vhdl_ex.extract_objects_from_source(code)
+        self.assertEqual(len(vhdl_objs), 2, "hdlparse should find two entitties (package and type def)")
+        self.assertEqual(vhdl_objs[0].name, "mymodule_pkg", "package name")
+        self.assertEqual(vhdl_objs[1].name, "ModeSelect_t", "type name")
+
+
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     unittest.main()

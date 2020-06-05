@@ -3,3 +3,5 @@
 !.gitignore
 !placeholder.txt
 !mymodule.rdl
+!gen_output.sh
+

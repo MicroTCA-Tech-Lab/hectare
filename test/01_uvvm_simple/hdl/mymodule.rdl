@@ -7,13 +7,29 @@ addrmap mymodule {
     default sw = rw;
     default hw = r;
 
+    enum ColorsEnum {
+        RED;
+        ORANGE;
+        YELLOW;
+        GREEN;
+        BLUE;
+        INDIGO;
+        VIOLET;
+    };
+
     reg {
         name = "Status register";
 
         field {
             sw=r; hw=rw;
-        } READY[31];
+        } READY[31:31];
 
+        field {
+            desc = "readback color selection";
+            sw = r;
+            hw = w;
+            encode = ColorsEnum;
+        } COLOR_SEL_RBV[27:24];
     } STATUS @ 0x0;
 
     reg {
@@ -21,7 +37,15 @@ addrmap mymodule {
 
         field {
             desc = "enable";
-        } ENABLE[31];
+        } ENABLE[31:31];
+
+        field {
+            desc = "select a color";
+            sw = rw;
+            hw = r;
+            swmod;
+            encode = ColorsEnum;
+        } COLOR_SEL[27:24];
     } CONTROL @ 0x4;
 
     reg {

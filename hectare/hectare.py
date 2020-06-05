@@ -16,6 +16,10 @@ from _HectareVhdlGen import HectareVhdlGen
 
 
 def gen_vhdl_axi(in_filename, out_filename):
+
+    if out_filename[-4:] != ".vhd":
+        raise ValueError("output filename is expected to have .vhd extension")
+
     rdlc = RDLCompiler()
     rdlc.compile_file(in_filename)
     root = rdlc.elaborate()
@@ -25,12 +29,21 @@ def gen_vhdl_axi(in_filename, out_filename):
     walker.walk(root, listener)
     print("Parsing finished.")
 
-    vhdl = HectareVhdlGen(listener.addrmaps[0], input_filename=in_filename)
-    s = vhdl.generate_string()
+    vhdl_gen = HectareVhdlGen(listener.addrmaps[0], input_filename=in_filename)
+    s_pkg = vhdl_gen.generate_package()
+    s_vhdl = vhdl_gen.generate_string()
+
     print("Generating {0} ...".format(out_filename))
     out_file = open(out_filename, "w")
-    out_file.write(s)
+    out_file.write(s_vhdl)
     out_file.close()
+
+    if s_pkg is not None:
+        pkg_filename = out_filename.replace(".vhd", "_pkg.vhd")
+        print("Generating {0} ...".format(pkg_filename))
+        out_file = open(pkg_filename, "w")
+        out_file.write(s_pkg)
+        out_file.close()
 
 
 def main():

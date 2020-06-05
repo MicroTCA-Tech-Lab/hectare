@@ -29,6 +29,7 @@ optional arguments:
   * `hw`: `r`, `rw`, `w`, `na`
   * `swmod`
   * `singlepulse`
+  * `encode`
 
 ## Tests
 
@@ -42,11 +43,21 @@ This is a simple unit test based on the Python [] framework.
 
 **UVVM version: v2019.12.04**
 
-Running the test (from folder `work`)
+Regenerating the output products (in shell, from folder `hdl`):
+
+```
+$ ./gen_output.sh
+Parsing finished.
+generate_package
+Generating mymodule.vhd ...
+Generating mymodule_pkg.vhd ...
+Done.
+```
+
+Running the test (in ModelSim, from folder `work`)
 
 ```
 do ../scripts/compile_uvvm.do
-../../../hectare/hectare.py ../hdl/mymodule.rdl
 do ../scripts/sim.do
 ```
 

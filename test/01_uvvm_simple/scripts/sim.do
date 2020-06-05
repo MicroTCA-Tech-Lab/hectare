@@ -8,7 +8,10 @@ if {[file exists work]} {
 #===============================================================================
 # compile modules
 
+vlib work
+
 # DUT
+vcom ../hdl/mymodule_pkg.vhd
 vcom ../hdl/mymodule.vhd
 
 # TB
@@ -64,6 +67,12 @@ add wave -radix hex \
     sim:/mymodule_tb/inst_test_harness/inst_dut/reg_result \
     sim:/mymodule_tb/inst_test_harness/inst_dut/rdata_reg
 
+add wave -divider "enums"
+
+add wave \
+    sim:/mymodule_tb/inst_test_harness/control_color_sel_o \
+    sim:/mymodule_tb/inst_test_harness/control_color_sel_swmod \
+    sim:/mymodule_tb/inst_test_harness/status_color_sel_rbv_i
 
 
 #===============================================================================

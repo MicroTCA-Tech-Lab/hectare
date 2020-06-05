@@ -1,0 +1,40 @@
+
+
+addrmap mymodule {
+    name = "Registers with enum";
+
+    default regwidth = 32;
+
+    enum ModeSelect {
+        CONST_0 = 0;
+        CONST_1;
+        PRBS_7;
+        PRBS_15;
+        PRBS_31;
+        USER_DATA;
+    };
+
+    //==========================================================================
+    // registers
+
+    reg {
+        name = "Status register";
+
+        field {
+            sw=r;hw=rw;
+        } READY[16:16];
+
+    } STATUS @ 0x0;
+
+    reg {
+        name = "Mode select";
+
+        field {
+            sw=rw; hw=r;
+            encode = ModeSelect;
+        } MODE[3:0];
+
+    } MODE_SELECT @ 0x10;
+
+
+} mymodule;

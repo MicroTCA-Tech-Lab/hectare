@@ -14,6 +14,8 @@ library bitvis_vip_axilite;
 use bitvis_vip_axilite.axilite_bfm_pkg.t_axilite_bfm_config;
 use bitvis_vip_axilite.axilite_bfm_pkg.C_AXILITE_BFM_CONFIG_DEFAULT;
 
+use work.mymodule_pkg.ColorsEnum_t;
+
 entity mymodule_th is
 end entity;
 
@@ -22,9 +24,12 @@ architecture arch of mymodule_th is
   constant G_ADDR_W : integer := 8;
   constant C_AXI4LITE_CONFIG : t_axilite_bfm_config := C_AXILITE_BFM_CONFIG_DEFAULT;
 
-  signal status_ready_o : std_logic_vector(30 downto 0);
-  signal status_ready_i : std_logic_vector(30 downto 0);
-  signal control_enable_o : std_logic_vector(30 downto 0);
+  signal status_color_sel_rbv_i : ColorsEnum_t;
+  signal status_ready_o : std_logic;
+  signal status_ready_i : std_logic;
+  signal control_color_sel_o : ColorsEnum_t;
+  signal control_color_sel_swmod : std_logic;
+  signal control_enable_o : std_logic;
   signal coef_a_a_o    : std_logic_vector(15 downto 0);
   signal coef_b_b_o    : std_logic_vector(15 downto 0);
   signal result_sum_o  : std_logic_vector(15 downto 0);
@@ -52,6 +57,9 @@ architecture arch of mymodule_th is
   signal S_AXI_RRESP   : std_logic_vector(1 downto 0);
   signal S_AXI_RVALID  : std_logic;
   signal S_AXI_RREADY  : std_logic;
+
+  type color_pipeline_t is array(natural range<>) of ColorsEnum_t;
+  signal color_pipeline : color_pipeline_t(0 to 2) := (others => RED);
 
 begin
 
@@ -113,8 +121,11 @@ begin
     G_ADDR_W => G_ADDR_W
   )
   port map (
+    status_color_sel_rbv_i => status_color_sel_rbv_i,
     status_ready_o => status_ready_o,
     status_ready_i => status_ready_i,
+    control_color_sel_o => control_color_sel_o,
+    control_color_sel_swmod => control_color_sel_swmod,
     control_enable_o => control_enable_o,
     coef_a_a_o => coef_a_a_o,
     coef_b_b_o => coef_b_b_o,
@@ -149,4 +160,17 @@ begin
   result_sum_i  <= std_logic_vector(unsigned(coef_a_a_o) + unsigned(coef_b_b_o));
   result_diff_i <= std_logic_vector(unsigned(coef_a_a_o) - unsigned(coef_b_b_o));
 
+  proc_color_pipeline: process (clk)
+  begin
+    if rising_edge(clk) then
+      if control_color_sel_swmod = '1' then
+        color_pipeline(0) <= control_color_sel_o;
+        for i in 1 to color_pipeline'length-1 loop
+          color_pipeline(i) <= color_pipeline(i-1);
+        end loop;
+      end if;
+    end if;
+  end process;
+
+  status_color_sel_rbv_i <= color_pipeline(color_pipeline'high);
 end architecture;
