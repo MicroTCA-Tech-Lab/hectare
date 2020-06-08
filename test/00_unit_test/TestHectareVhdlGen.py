@@ -174,7 +174,7 @@ class TestHectareVhdlGen(unittest.TestCase):
 
     def test_gen_single_reset_assignment(self):
 
-        RESET_VAL = 0x1234
+        RESET_VAL = 0x12
 
         field = Field(
             "myfield", 8, 15, AccessType.rw, AccessType.rw, swmod=False, reset=RESET_VAL
@@ -182,7 +182,9 @@ class TestHectareVhdlGen(unittest.TestCase):
 
         line = HectareVhdlGen._gen_single_reset_assignment("myreg", field)
         assign_val = line.split("<=")[1].strip().replace(";", "")
-        self.assertEqual(assign_val, '"{0:b}"'.format(RESET_VAL), "reset value")
+
+        self.assertEqual(assign_val, '"{0:08b}"'.format(RESET_VAL), "reset value")
+        self.assertEqual(len(assign_val), 8+2+1, "assign value must be of same size as the field")
 
 
 if __name__ == "__main__":

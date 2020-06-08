@@ -523,7 +523,7 @@ class HectareVhdlGen:
             lsb = field.lsb
 
             # we always assign to a vector, even for single-bit signals
-            assign_val = '"{0:b}"'.format(field.reset)
+            assign_val = '"{val:0{l}b}"'.format(val=field.reset, l=msb - lsb + 1)
 
             assign_str = "reg_{reg_name}({msb} downto {lsb}) <= {assign_val};".format(
                 reg_name=reg_name.lower(), msb=msb, lsb=lsb, assign_val=assign_val
