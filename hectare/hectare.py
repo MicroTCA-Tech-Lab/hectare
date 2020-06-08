@@ -13,6 +13,7 @@ from systemrdl import RDLCompileError, RDLCompiler, RDLWalker
 
 from hectare._HectareListener import HectareListener
 from hectare._HectareVhdlGen import HectareVhdlGen
+from hectare.__init__ import __version__ as hectare_version
 
 
 def gen_vhdl_axi(in_filename, out_filename):
@@ -51,6 +52,9 @@ def main():
         description="HECTARE - Hamburg Elegant CreaTor from Accelera systemrdl to REgisters"
     )
     parser.add_argument("filename", type=str, help=".rdl file")
+    parser.add_argument(
+        "--version", action="version", version="%(prog)s " + hectare_version
+    )
     parser.add_argument(
         "--debug", action="store_true", help="enable debugging information"
     )

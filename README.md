@@ -38,6 +38,10 @@ optional arguments:
 
 ## Changelog
 
+### [Unreleased]
+
+* Add version argument (`--version`) to print version information
+
 ### [0.2.0] - 2020-06-08
 
 * First public release
