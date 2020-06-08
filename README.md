@@ -1,3 +1,5 @@
+[![PyPI version](https://badge.fury.io/py/hectare.svg)](https://badge.fury.io/py/hectare)
+
 # HECTARE - Hamburg Elegant CreaTor from Accellera™ systemrdl™ to REgisters
 
 This is a tool which generates AXI4-Lite slave from a description in
