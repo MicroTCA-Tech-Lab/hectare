@@ -33,6 +33,7 @@ class Field:
         sw_acc_type: systemrdl.rdltypes.AccessType,
         swmod: bool,
         encode: Optional[enum.EnumMeta] = None,
+        reset: Optional[int] = None,
     ):
         self.name: str = name
         self.lsb: int = lsb
@@ -41,3 +42,4 @@ class Field:
         self.sw_acc_type: systemrdl.rdltypes.AccessType = sw_acc_type
         self.swmod: bool = swmod
         self.encode = encode
+        self.reset: Optional[int] = reset

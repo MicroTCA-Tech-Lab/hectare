@@ -59,6 +59,18 @@ begin
     check_value(v_lite_result(31 downto 16), x"0001", ERROR, "diff (a - b)");
     wait for 100 ns;
 
+
+    axilite_read(AXILITE_VVCT, 1, x"08", "ident register");
+    v_idx := get_last_received_cmd_idx(AXILITE_VVCT, 1);
+    await_completion(AXILITE_VVCT, 1, 100 ns, "wait for read to complete");
+    fetch_result(AXILITE_VVCT, 1, v_idx, v_lite_result);
+    log(ID_LOG_HDR, "result = " & to_hstring(v_lite_result(31 downto 0)));
+
+    check_value(v_lite_result(31 downto 0), x"a1b2c3d4", ERROR, "ident register");
+
+    wait for 100 ns;
+
+
     -- =========================================================================
     --  set colors
     --

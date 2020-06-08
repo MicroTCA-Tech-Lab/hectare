@@ -37,7 +37,7 @@ addrmap mymodule {
 
         field {
             desc = "enable";
-        } ENABLE[31:31];
+        } ENABLE[31:31] = 0;
 
         field {
             desc = "select a color";
@@ -47,6 +47,16 @@ addrmap mymodule {
             encode = ColorsEnum;
         } COLOR_SEL[27:24];
     } CONTROL @ 0x4;
+
+    reg {
+        name = "Identification register";
+
+        field {
+            desc = "ident";
+            sw = r;
+            hw = na;
+        } IDENT[31:0] = 0xa1b2c3d4;
+    } IDENT @ 0x8;
 
     reg {
         field {

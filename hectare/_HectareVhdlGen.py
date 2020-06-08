@@ -218,49 +218,60 @@ class HectareVhdlGen:
         lines = []
         lines.append("proc_write: process (clk) begin")
         lines.append("  if rising_edge(clk) then")
+        lines.append("    if reset = '1' then")
+
+        # generate reset assignments
+        for reg in self.addrmap.regs:
+            for field in reg.fields:
+                line = self._gen_single_reset_assignment(reg.name, field)
+                if line is not None:
+                    lines.append("      " + line)
+
+        lines.append("    else")
         lines.append("")
-        lines.append("    -- default (pulse)")
-        lines.append("    -- TODO")
+        lines.append("      -- default (pulse)")
+        lines.append("      -- TODO")
         # TODO: handle here pulses
         lines.append("")
-        lines.append("    -- default (swmod)")
+        lines.append("      -- default (swmod)")
         for reg in self.addrmap.regs:
             has_swmod = any(map(lambda f: f.swmod, reg.fields))
             if has_swmod:
                 lines.append(
-                    "    reg_{name}_swmod <= '0';".format(name=reg.name.lower())
+                    "      reg_{name}_swmod <= '0';".format(name=reg.name.lower())
                 )
 
         lines.append("")
 
         lines.append(
-            "    if state_write = sWriteResp and state_write_prev /= sWriteResp then"
+            "      if state_write = sWriteResp and state_write_prev /= sWriteResp then"
         )
-        lines.append("      case waddr_word is")
+        lines.append("        case waddr_word is")
 
         for reg in self.addrmap.regs:
-            lines.append("        when C_ADDR_{0} =>".format(reg.name.upper()))
+            lines.append("          when C_ADDR_{0} =>".format(reg.name.upper()))
             reg_has_assign = False
             for field in reg.fields:
                 line = self._gen_single_sw_wr_access(reg.name, field)
                 if line is not None:
-                    lines.append("          " + line)
+                    lines.append("            " + line)
                     reg_has_assign = True
                 # swmod
                 has_swmod = any(map(lambda f: f.swmod, reg.fields))
                 if has_swmod:
                     lines.append(
-                        "          reg_{name}_swmod <= '1';".format(
+                        "            reg_{name}_swmod <= '1';".format(
                             name=reg.name.lower()
                         )
                     )
 
             if not reg_has_assign:
-                lines.append("          null;")
+                lines.append("            null;")
 
-        lines.append("        when others  =>")
-        lines.append("          null;")
-        lines.append("      end case;")
+        lines.append("          when others  =>")
+        lines.append("            null;")
+        lines.append("        end case;")
+        lines.append("      end if;")
         lines.append("    end if;")
         lines.append("  end if;")
         lines.append("end process;")
@@ -500,5 +511,23 @@ class HectareVhdlGen:
                 reg_name=reg_name.lower(), msb=field.msb, lsb=field.lsb,
             )
             return in_str
+
+        return None
+
+    @staticmethod
+    def _gen_single_reset_assignment(reg_name: str, field: Field) -> Optional[str]:
+        """ Generate reset assignment if the field has a reset value """
+
+        if field.reset is not None:
+            msb = field.msb
+            lsb = field.lsb
+
+            # we always assign to a vector, even for single-bit signals
+            assign_val = '"{0:b}"'.format(field.reset)
+
+            assign_str = "reg_{reg_name}({msb} downto {lsb}) <= {assign_val};".format(
+                reg_name=reg_name.lower(), msb=msb, lsb=lsb, assign_val=assign_val
+            )
+            return assign_str
 
         return None

@@ -1,3 +1,3 @@
 
-../../../hectare/hectare.py --axi-vhdl mymodule.vhd mymodule.rdl
+hectare --axi-vhdl mymodule.vhd mymodule.rdl
 

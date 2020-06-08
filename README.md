@@ -40,6 +40,7 @@ optional arguments:
 
 ### [Unreleased]
 
+* Add support for reset values
 * Add version argument (`--version`) to print version information
 
 ### [0.2.0] - 2020-06-08

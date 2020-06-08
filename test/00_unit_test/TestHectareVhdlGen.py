@@ -172,6 +172,18 @@ class TestHectareVhdlGen(unittest.TestCase):
 
         self.assertRaises(AssertionError, HectareVhdlGen._gen_single_enum_type, field)
 
+    def test_gen_single_reset_assignment(self):
+
+        RESET_VAL = 0x1234
+
+        field = Field(
+            "myfield", 8, 15, AccessType.rw, AccessType.rw, swmod=False, reset=RESET_VAL
+        )
+
+        line = HectareVhdlGen._gen_single_reset_assignment("myreg", field)
+        assign_val = line.split("<=")[1].strip().replace(";", "")
+        self.assertEqual(assign_val, '"{0:b}"'.format(RESET_VAL), "reset value")
+
 
 if __name__ == "__main__":
     unittest.main()
