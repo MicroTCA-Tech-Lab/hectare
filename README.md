@@ -31,8 +31,17 @@ optional arguments:
   * `sw`: `r`, `rw`, `w`, `na`
   * `hw`: `r`, `rw`, `w`, `na`
   * `swmod`
-  * `singlepulse`
+  * `singlepulse` (currently not yet supported)
   * `encode`
+
+## Changelog
+
+### [0.2.0] - 2020-06-08
+
+* First public release
+* Provides generation of AXI4-Lite module in VHDL
+* Supports all possible combination for `sw` and `rw` properties as well as
+  `swmod` and `encode` attribute
 
 ## Tests
 

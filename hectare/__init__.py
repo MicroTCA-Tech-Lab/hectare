@@ -1,4 +1,2 @@
 __author__ = "Jan Marjanovic (DESY)"
-__version__ = "0.1.3"
-
-import hectare
+__version__ = "0.2.0"
