@@ -89,7 +89,7 @@ class HectareVhdlGen:
             )
             s += "\n"
 
-        s += "entity {entity_name} is\n".format(entity_name=self.addrmap.name)
+        s += "entity {entity_name}_axi is\n".format(entity_name=self.addrmap.name)
         s += "  generic(\n"
         s += "    G_ADDR_W: integer := 8\n"
         s += "  );\n"
