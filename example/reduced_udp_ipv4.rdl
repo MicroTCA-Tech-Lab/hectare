@@ -40,6 +40,25 @@ addrmap udp_ipv4_engine {
     } REG_SCRATCH @ 0xC;
 
     reg {
+        name = "Control register";
+
+        field {
+            sw = rw;
+            hw = r;
+        } IRQ_MASK[23:16];
+
+        field {
+            sw = rw;
+            hw = r;
+        } IRQ_EN[8:8];
+
+        field {
+            sw = rw;
+            hw = r;
+        } MODE[3:0];
+    } REG_CTRL @ 0x10;
+
+    reg {
         name = "Source MAC Address, MSB";
         desc = "Source MAC address (48 bits) is composed as {REG_SRC_MAC0[15:0], (REG_SRC_MAC1}";
         field {

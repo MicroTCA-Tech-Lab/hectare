@@ -40,6 +40,7 @@ optional arguments:
 
 ### [Unreleased]
 
+* Add C header generator
 * Add support for reset values
 * Add version argument (`--version`) to print version information
 
