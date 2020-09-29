@@ -13,6 +13,7 @@ from systemrdl import RDLCompileError, RDLCompiler, RDLWalker
 
 from hectare._HectareListener import HectareListener
 from hectare._HectareVhdlGen import HectareVhdlGen
+from hectare._HectareVerilogGen import HectareVerilogGen
 from hectare.__init__ import __version__ as hectare_version
 
 
@@ -47,6 +48,37 @@ def gen_vhdl_axi(in_filename, out_filename):
         out_file.close()
 
 
+def gen_verilog_axi(in_filename, out_filename):
+
+    if out_filename[-2:] != ".v":
+        raise ValueError("output filename is expected to have .v extension")
+
+    rdlc = RDLCompiler()
+    rdlc.compile_file(in_filename)
+    root = rdlc.elaborate()
+
+    walker = RDLWalker(unroll=True)
+    listener = HectareListener()
+    walker.walk(root, listener)
+    print("Parsing finished.")
+
+    verilog_gen = HectareVerilogGen(listener.addrmaps[0], input_filename=in_filename)
+    s_pkg  = verilog_gen.generate_package()
+    s_verilog = verilog_gen.generate_string()
+
+    print("Generating {0} ...".format(out_filename))
+    out_file = open(out_filename, "w")
+    out_file.write(s_verilog)
+    out_file.close()
+
+    if s_pkg is not None:
+        pkg_filename = out_filename.replace(".v", "_pkg.v")
+        print("Generating {0} ...".format(pkg_filename))
+        out_file = open(pkg_filename, "w")
+        out_file.write(s_pkg)
+        out_file.close()
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="HECTARE - Hamburg Elegant CreaTor from Accelera systemrdl to REgisters"
@@ -65,6 +97,13 @@ def main():
         type=str,
         help="generate AXI4-Lite slave",
     )
+    parser.add_argument(
+        "--axi-verilog",
+        nargs=1,
+        dest="verilog_name",
+        type=str,
+        help="generate AXI4-Lite slave",
+    )
     args = parser.parse_args()
 
     if args.debug:
@@ -73,6 +112,8 @@ def main():
     try:
         if args.vhdl_name is not None:
             gen_vhdl_axi(args.filename, args.vhdl_name[0])
+        if args.verilog_name is not None:
+            gen_verilog_axi(args.filename, args.verilog_name[0])
     except RDLCompileError as err:
         print(err)
         sys.exit(1)
