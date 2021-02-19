@@ -38,7 +38,7 @@ optional arguments:
 
 ## Changelog
 
-### [Unreleased]
+### [0.2.1] - 2021-02-19
 
 * Add C header generator
 * Add support for reset values
