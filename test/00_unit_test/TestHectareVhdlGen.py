@@ -184,7 +184,7 @@ class TestHectareVhdlGen(unittest.TestCase):
         assign_val = line.split("<=")[1].strip().replace(";", "")
 
         self.assertEqual(assign_val, '"{0:08b}"'.format(RESET_VAL), "reset value")
-        self.assertEqual(len(assign_val), 8+2+1, "assign value must be of same size as the field")
+        self.assertEqual(len(assign_val), 8+2, "assign value must be of same size as the field")
 
 
 if __name__ == "__main__":
