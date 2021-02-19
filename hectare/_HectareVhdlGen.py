@@ -100,7 +100,7 @@ class HectareVhdlGen:
         s += "\n);\n"
         s += "end entity;\n\n"
 
-        s += "architecture arch of {entity_name} is\n".format(
+        s += "architecture arch of {entity_name}_axi is\n".format(
             entity_name=self.addrmap.name
         )
 

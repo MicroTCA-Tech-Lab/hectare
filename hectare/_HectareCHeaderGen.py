@@ -1,5 +1,5 @@
 """
-Copyright (c) 2020 Deutsches Elektronen-Synchrotron DESY.
+Copyright (c) 2020-2021 Deutsches Elektronen-Synchrotron DESY.
 
 See LICENSE.txt for license details.
 """
@@ -33,9 +33,14 @@ class HectareCHeaderGen:
         s += self._gen_header(self.input_filename)
         s += "\n"
 
+        s += "#pragma once\n"
+
         s += "\n\n// address constants\n"
         s += "\n".join(self._gen_reg_addr())
         s += "\n"
+
+        s += "\n\n// reset values\n"
+        s += "\n".join(self._gen_reg_reset_vals())
 
         s += "\n\n// individual field shift\n"
         s += "\n".join(self._gen_field_shift())
@@ -62,6 +67,24 @@ class HectareCHeaderGen:
     def _gen_reg_addr(self) -> List[str]:
         comp_name = self.addrmap.name.upper()
         return [self._gen_single_addr(comp_name, reg) for reg in self.addrmap.regs]
+
+    def _gen_reg_reset_vals(self) -> List[str]:
+        # we only generate those for the values with hw=na, sw=r
+        comp_name = self.addrmap.name.upper()
+        reset_vals = []
+        for reg in self.addrmap.regs:
+            line_added = False
+            for field in reg.fields:
+                if field.sw_acc_type == AccessType.r and field.hw_acc_type == AccessType.na:
+                    reset_vals.append(self._gen_single_reg_reset_vals(comp_name, reg.name, field))
+                    line_added = True
+
+            # to make this prettier, we only add an empty line after a group of "#define"-s
+            if line_added:
+                line_added = False
+                reset_vals.append("")
+
+        return reset_vals
 
     def _gen_field_shift(self) -> List[str]:
         comp_name = self.addrmap.name.upper()
@@ -101,6 +124,22 @@ class HectareCHeaderGen:
 
         return "#define {comp_name}_ADDR_{name} ({byte_addr})".format(
             comp_name=comp_name, name=reg.name.upper(), byte_addr=reg.addr
+        )
+
+    @staticmethod
+    def _gen_single_reg_reset_vals(comp_name: str, reg_name: str, field: Field) -> str:
+        """ Generate a reset values (can be used to check if matches in SW)
+
+        this functions expects that a field has a reset value
+        """
+
+        assert field.reset is not None
+
+        return "#define {comp_name}_{reg_name}_{field_name}_RST_VAL (0x{rst_val:x})".format(
+            comp_name=comp_name,
+            reg_name=reg_name,
+            field_name=field.name.upper(),
+            rst_val=field.reset,
         )
 
     @staticmethod
