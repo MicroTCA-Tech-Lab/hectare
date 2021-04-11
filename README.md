@@ -33,10 +33,14 @@ optional arguments:
   * `sw`: `r`, `rw`, `w`, `na`
   * `hw`: `r`, `rw`, `w`, `na`
   * `swmod`
-  * `singlepulse` (currently not yet supported)
+  * `singlepulse`
   * `encode`
 
 ## Changelog
+
+### [0.2.2] - 2021-04-11
+
+* Add support for `singlepulse`
 
 ### [0.2.1] - 2021-02-19
 

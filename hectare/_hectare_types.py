@@ -1,5 +1,5 @@
 """
-Copyright (c) 2020 Deutsches Elektronen-Synchrotron DESY.
+Copyright (c) 2020 - 2021 Deutsches Elektronen-Synchrotron DESY.
 
 See LICENSE.txt for license details.
 """
@@ -32,6 +32,7 @@ class Field:
         hw_acc_type: systemrdl.rdltypes.AccessType,
         sw_acc_type: systemrdl.rdltypes.AccessType,
         swmod: bool,
+        singlepulse: bool,
         encode: Optional[enum.EnumMeta] = None,
         reset: Optional[int] = None,
     ):
@@ -41,5 +42,6 @@ class Field:
         self.hw_acc_type: systemrdl.rdltypes.AccessType = hw_acc_type
         self.sw_acc_type: systemrdl.rdltypes.AccessType = sw_acc_type
         self.swmod: bool = swmod
+        self.singlepulse = singlepulse
         self.encode = encode
         self.reset: Optional[int] = reset

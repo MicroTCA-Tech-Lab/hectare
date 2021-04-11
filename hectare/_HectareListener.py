@@ -1,5 +1,5 @@
 """
-Copyright (c) 2020 Deutsches Elektronen-Synchrotron DESY.
+Copyright (c) 2020 - 2021 Deutsches Elektronen-Synchrotron DESY.
 
 See LICENSE.txt for license details.
 """
@@ -53,6 +53,7 @@ class HectareListener(RDLListener):
                 swmod=node.get_property("swmod"),
                 encode=node.get_property("encode"),
                 reset=node.get_property("reset"),
+                singlepulse=node.get_property("singlepulse")
             )
         )
 

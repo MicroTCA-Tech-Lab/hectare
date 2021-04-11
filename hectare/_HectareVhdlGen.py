@@ -1,5 +1,5 @@
 """
-Copyright (c) 2020 Deutsches Elektronen-Synchrotron DESY.
+Copyright (c) 2020 - 2021 Deutsches Elektronen-Synchrotron DESY.
 
 See LICENSE.txt for license details.
 """
@@ -230,8 +230,11 @@ class HectareVhdlGen:
         lines.append("    else")
         lines.append("")
         lines.append("      -- default (pulse)")
-        lines.append("      -- TODO")
-        # TODO: handle here pulses
+        for reg in self.addrmap.regs:
+            for field in reg.fields:
+                line = self._gen_single_singlepulse_assignment(reg.name, field)
+                if line is not None:
+                    lines.append("      " + line)
         lines.append("")
         lines.append("      -- default (swmod)")
         for reg in self.addrmap.regs:
@@ -524,6 +527,22 @@ class HectareVhdlGen:
 
             # we always assign to a vector, even for single-bit signals
             assign_val = '"{val:0{l}b}"'.format(val=field.reset, l=msb - lsb + 1)
+
+            assign_str = "reg_{reg_name}({msb} downto {lsb}) <= {assign_val};".format(
+                reg_name=reg_name.lower(), msb=msb, lsb=lsb, assign_val=assign_val
+            )
+            return assign_str
+
+        return None
+
+    @staticmethod
+    def _gen_single_singlepulse_assignment(reg_name: str, field: Field) -> Optional[str]:
+        if field.singlepulse:
+            msb = field.msb
+            lsb = field.lsb
+
+            # we always assign to a vector, even for single-bit signals
+            assign_val = '"{val:0{l}b}"'.format(val=0, l=msb - lsb + 1)
 
             assign_str = "reg_{reg_name}({msb} downto {lsb}) <= {assign_val};".format(
                 reg_name=reg_name.lower(), msb=msb, lsb=lsb, assign_val=assign_val
