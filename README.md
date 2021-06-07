@@ -34,9 +34,14 @@ optional arguments:
   * `hw`: `r`, `rw`, `w`, `na`
   * `swmod`
   * `singlepulse`
+  * `woclr`
   * `encode`
 
 ## Changelog
+
+### [0.2.3] - 2021-06-07
+
+* Add support for `woclr`
 
 ### [0.2.2] - 2021-04-11
 

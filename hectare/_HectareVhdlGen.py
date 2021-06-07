@@ -177,6 +177,10 @@ class HectareVhdlGen:
             swmod_reg = self._gen_single_reg_swmod(reg, self.data_w_bytes)
             if swmod_reg is not None:
                 ls.append(swmod_reg)
+        for reg in self.addrmap.regs:
+            woclr_reg = self._gen_single_reg_woclr(reg, self.data_w_bytes)
+            if woclr_reg is not None:
+                ls.append(woclr_reg)
         return ls
 
     def _gen_hw_access(self) -> List[str]:
@@ -243,6 +247,13 @@ class HectareVhdlGen:
                 lines.append(
                     "      reg_{name}_swmod <= '0';".format(name=reg.name.lower())
                 )
+        lines.append("")
+        lines.append("      -- default (woclr)")
+        for reg in self.addrmap.regs:
+            for field in reg.fields:
+                line = self._gen_single_woclr_assignment(reg.name, field)
+                if line is not None:
+                    lines.append("      " + line)
 
         lines.append("")
 
@@ -255,7 +266,13 @@ class HectareVhdlGen:
             lines.append("          when C_ADDR_{0} =>".format(reg.name.upper()))
             reg_has_assign = False
             for field in reg.fields:
+                # normal write
                 line = self._gen_single_sw_wr_access(reg.name, field)
+                if line is not None:
+                    lines.append("            " + line)
+                    reg_has_assign = True
+                # woclr
+                line = self._gen_single_sw_woclr(reg.name, field)
                 if line is not None:
                     lines.append("            " + line)
                     reg_has_assign = True
@@ -358,6 +375,18 @@ class HectareVhdlGen:
             return None
 
     @staticmethod
+    def _gen_single_reg_woclr(reg: Register, data_w_bytes: int) -> Optional[str]:
+        """ generates woclr reg is at least one field in the register has woclr attribute  """
+
+        has_woclr = any(map(lambda f: f.woclr, reg.fields))
+        if has_woclr:
+            return "signal reg_{name}_woclr : std_logic_vector({w}-1 downto 0);".format(
+                name=reg.name.lower(), w=data_w_bytes * 8
+            )
+        else:
+            return None
+
+    @staticmethod
     def _gen_single_port(reg_name: str, field: Field) -> List[str]:
         """ Generate output and input ports for a single field
 
@@ -399,6 +428,13 @@ class HectareVhdlGen:
         if field.swmod:
             swmod_str = "{reg_name}_{field_name}_swmod : out std_logic;".format(
                 field_name=field.name.lower(), reg_name=reg_name.lower()
+            )
+            l.append(swmod_str)
+
+        if field.woclr:
+            swmod_str = "{reg_name}_{field_name}_woclr : out {port_type};".format(
+                field_name=field.name.lower(), reg_name=reg_name.lower(),
+                port_type=port_type
             )
             l.append(swmod_str)
 
@@ -473,6 +509,13 @@ class HectareVhdlGen:
             )
             l.append(swmod_str)
 
+        if field.woclr:
+            woclr_str = "{reg_name}_{field_name}_woclr <= reg_{reg_name}_woclr({reg_slice});".format(
+                field_name=field.name.lower(), reg_name=reg_name.lower(),
+                reg_slice=reg_slice
+            )
+            l.append(woclr_str)
+
         return l
 
     @staticmethod
@@ -509,13 +552,28 @@ class HectareVhdlGen:
             field.sw_acc_type != AccessType.rw1 or field.sw_acc_type != AccessType.w1
         ), '"rw1" and "w1" are not supported for HW access'
 
-        if field.sw_acc_type == AccessType.w or field.sw_acc_type == AccessType.rw:
+        if field.sw_acc_type == AccessType.w or field.sw_acc_type == AccessType.rw and not field.woclr:
             in_str = "reg_{reg_name}({msb} downto {lsb}) <= wdata_reg({msb} downto {lsb});".format(
                 reg_name=reg_name.lower(), msb=field.msb, lsb=field.lsb,
             )
             return in_str
 
         return None
+
+    @staticmethod
+    def _gen_single_sw_woclr(reg_name: str, field: Field) -> Optional[str]:
+        assert (
+            field.sw_acc_type != AccessType.rw1 or field.sw_acc_type != AccessType.w1
+        ), '"rw1" and "w1" are not supported for HW access'
+
+        if field.sw_acc_type == AccessType.w or field.sw_acc_type == AccessType.rw and field.woclr:
+            in_str = "reg_{reg_name}_woclr({msb} downto {lsb}) <= wdata_reg({msb} downto {lsb});".format(
+                reg_name=reg_name.lower(), msb=field.msb, lsb=field.lsb,
+            )
+            return in_str
+
+        return None
+
 
     @staticmethod
     def _gen_single_reset_assignment(reg_name: str, field: Field) -> Optional[str]:
@@ -545,6 +603,20 @@ class HectareVhdlGen:
             assign_val = '"{val:0{l}b}"'.format(val=0, l=msb - lsb + 1)
 
             assign_str = "reg_{reg_name}({msb} downto {lsb}) <= {assign_val};".format(
+                reg_name=reg_name.lower(), msb=msb, lsb=lsb, assign_val=assign_val
+            )
+            return assign_str
+
+    @staticmethod
+    def _gen_single_woclr_assignment(reg_name: str, field: Field) -> Optional[str]:
+        if field.woclr:
+            msb = field.msb
+            lsb = field.lsb
+
+            # we always assign to a vector, even for single-bit signals
+            assign_val = '"{val:0{l}b}"'.format(val=0, l=msb - lsb + 1)
+
+            assign_str = "reg_{reg_name}_woclr({msb} downto {lsb}) <= {assign_val};".format(
                 reg_name=reg_name.lower(), msb=msb, lsb=lsb, assign_val=assign_val
             )
             return assign_str

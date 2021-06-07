@@ -32,7 +32,8 @@ class Field:
         hw_acc_type: systemrdl.rdltypes.AccessType,
         sw_acc_type: systemrdl.rdltypes.AccessType,
         swmod: bool,
-        singlepulse: bool,
+        woclr: bool = False,
+        singlepulse: bool = False,
         encode: Optional[enum.EnumMeta] = None,
         reset: Optional[int] = None,
     ):
@@ -42,6 +43,7 @@ class Field:
         self.hw_acc_type: systemrdl.rdltypes.AccessType = hw_acc_type
         self.sw_acc_type: systemrdl.rdltypes.AccessType = sw_acc_type
         self.swmod: bool = swmod
+        self.woclr: bool = woclr
         self.singlepulse = singlepulse
         self.encode = encode
         self.reset: Optional[int] = reset
