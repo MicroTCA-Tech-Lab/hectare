@@ -212,7 +212,8 @@ class HectareVhdlGen:
                 lines.append("          null;")
 
         lines.append("        when others  =>")
-        lines.append("          null;")
+        lines.append("          -- decode error")
+        lines.append("          rdata_reg <= x\"badc0fee\";")
         lines.append("      end case;")
         lines.append("    end if;")
         lines.append("  end process;")

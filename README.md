@@ -39,6 +39,10 @@ optional arguments:
 
 ## Changelog
 
+### [0.2.4] - 2021-06-19
+
+* Read decode error returns `0xbadcofee`
+
 ### [0.2.3] - 2021-06-07
 
 * Add support for `woclr`
